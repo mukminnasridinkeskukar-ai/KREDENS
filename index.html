@@ -1830,14 +1830,16 @@
         // CONFIGURATION & CONSTANTS
         // ============================================
         
-        const SUPABASE_URL = 'https://tafwfgccrdjhotddoviu.supabase.co'; // Replace with your Supabase URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhZndmZ2NjcmRqaG90ZGRvdml1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyODM0NDksImV4cCI6MjEwMjg1OTQ0OX0.YMni6ZjoT9jcDgelm9TiSX4eUvV19_ZKGRcVQsxyjzE'; // Replace with your Supabase anon key
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Replace with your Supabase anon key
         
-        // Initialize Supabase client
-        let supabase = null;
+        // Initialize Supabase client (gunakan nama variabel berbeda untuk menghindari konflik)
+        let supabaseClient = null;
         
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            if (window.supabase && window.supabase.createClient) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
         } catch (e) {
             console.warn('Supabase client initialization failed. Using demo mode.', e);
         }
@@ -1998,9 +2000,9 @@
             showLoading(true);
             
             try {
-                if (supabase) {
+                if (supabaseClient) {
                     // Load Unit Kerja
-                    const { data: unitKerjaData } = await supabase
+                    const { data: unitKerjaData } = await supabaseClient
                         .from('unit_kerja')
                         .select('*')
                         .eq('is_active', true)
@@ -2009,7 +2011,7 @@
                     if (unitKerjaData) masterData.unitKerja = unitKerjaData;
 
                     // Load Jenis SDMK
-                    const { data: sdmkData } = await supabase
+                    const { data: sdmkData } = await supabaseClient
                         .from('jenis_sdmk')
                         .select('*')
                         .order('kode');
@@ -2017,7 +2019,7 @@
                     if (sdmkData) masterData.jenisSdmk = sdmkData;
 
                     // Load Jenis Profesi
-                    const { data: profesiData } = await supabase
+                    const { data: profesiData } = await supabaseClient
                         .from('jenis_profesi')
                         .select('*, jenis_sdmk(*)')
                         .order('kode');
@@ -2025,7 +2027,7 @@
                     if (profesiData) masterData.jenisProfesi = profesiData;
 
                     // Load Kompetensi
-                    const { data: kompetensiData } = await supabase
+                    const { data: kompetensiData } = await supabaseClient
                         .from('kompetensi')
                         .select('*')
                         .order('kode');
@@ -2033,7 +2035,7 @@
                     if (kompetensiData) masterData.kompetensi = kompetensiData;
 
                     // Load Kewenangan Klinis
-                    const { data: kewenanganData } = await supabase
+                    const { data: kewenanganData } = await supabaseClient
                         .from('kewenangan_klinis_master')
                         .select('*')
                         .order('kode');
@@ -3019,11 +3021,11 @@
             showLoading(true);
 
             try {
-                if (supabase) {
+                if (supabaseClient) {
                     // Check if we have an existing record
                     if (formData.id) {
                         // Update existing
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('pengajuan_kredensial')
                             .update({
                                 nik: formData.identitas.nik,
@@ -3047,10 +3049,10 @@
                         if (error) throw error;
                     } else {
                         // Create new
-                        const { data, error } = await supabase
+                        const { data, error } = await supabaseClient
                             .from('pengajuan_kredensial')
                             .insert({
-                                user_id: supabase.auth.user()?.id || 'anonymous',
+                                user_id: supabaseClient.auth.user()?.id || 'anonymous',
                                 jenis_pengajuan: formData.jenisPengajuan,
                                 status: 'DRAFT',
                                 nik: formData.identitas.nik,
@@ -3103,7 +3105,7 @@
             showLoading(true);
 
             try {
-                if (supabase) {
+                if (supabaseClient) {
                     // Generate submission number if needed
                     if (!formData.nomorPengajuan) {
                         const year = new Date().getFullYear();
@@ -3113,7 +3115,7 @@
                     // Insert or update main record
                     let pengajuanData;
                     if (formData.id) {
-                        const { data, error } = await supabase
+                        const { data, error } = await supabaseClient
                             .from('pengajuan_kredensial')
                             .update({
                                 status: 'DIAJUKAN',
@@ -3127,10 +3129,10 @@
                         if (error) throw error;
                         pengajuanData = data;
                     } else {
-                        const { data, error } = await supabase
+                        const { data, error } = await supabaseClient
                             .from('pengajuan_kredensial')
                             .insert({
-                                user_id: supabase.auth.user()?.id || 'anonymous',
+                                user_id: supabaseClient.auth.user()?.id || 'anonymous',
                                 jenis_pengajuan: formData.jenisPengajuan,
                                 status: 'DIAJUKAN',
                                 nik: formData.identitas.nik,
