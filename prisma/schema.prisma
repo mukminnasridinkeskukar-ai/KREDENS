@@ -1,0 +1,462 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// KREDENS - Sistem Tata Kelola Kredensial
+// Tenaga Medis dan Tenaga Kesehatan
+// Dinas Kesehatan Kabupaten Kutai Kartanegara
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("PEMOHON") // PEMOHON, PUSKESMAS, OPERATOR_DINAS, TIM_AD_HOC, ADMIN, SUPERADMIN
+  nik       String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial[]
+  auditLog  AuditLog[]
+  
+  @@map("users")
+}
+
+// ============================================
+// MASTER DATA TABLES
+// ============================================
+
+model MasterPuskesmas {
+  id          String   @id @default(cuid())
+  kode        String   @unique
+  nama        String
+  alamat      String?
+  telp        String?
+  email       String?
+  tipe        String?  // PUSKESMAS, RUMAH_SAKIT, KLINIK
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial[]
+  penetapan  PenetapanKewenangan[]
+  
+  @@map("master_puskesmas")
+}
+
+model MasterProfesi {
+  id            String   @id @default(cuid())
+  kode          String   @unique
+  nama          String
+  jenisSdmk     String   // TENAGA_KESEHATAN, TENAGA_MEDIS
+  kategori      String?  // KLINIK, NON_KLINIK
+  deskripsi     String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  pengajuan         PengajuanKredensial[]
+  kompetensi        MasterKompetensi[]
+  kewenangan        MasterKewenanganKlinis[]
+  
+  @@map("master_profesi")
+}
+
+model MasterKompetensi {
+  id          String   @id @default(cuid())
+  kode        String   @unique
+  nama        String
+  deskripsi   String?
+  profesiId   String
+  level       String?  // DASAR, MENENGAH, LANJUTAN
+  jenis       String?  // UTAMA, KHUSUS, PENUNJANG
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  profesi      MasterProfesi @relation(fields: [profesiId], references: [id])
+  assessment   SelfAssessment[]
+  
+  @@map("master_kompetensi")
+}
+
+model MasterKewenanganKlinis {
+  id            String   @id @default(cuid())
+  kode          String   @unique
+  nama          String
+  deskripsi     String?
+  profesiId     String
+  kategori      String?  // DIAGNOSTIK, TERAPEUTIK, PREVENTIF
+  tingkatDefault String? // MANDIRI, SUPERVISI
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  profesi      MasterProfesi @relation(fields: [profesiId], references: [id])
+  kewenanganDiajukan KewenanganDiajukan[]
+  
+  @@map("master_kewenangan_klinis")
+}
+
+model MasterDokumen {
+  id          String   @id @default(cuid())
+  kode        String   @unique
+  nama        String
+  deskripsi   String?
+  isWajib     Boolean  @default(false)
+  format      String?  // PDF, JPG, JPEG, PNG
+  ukuranMax   Int?     // in KB
+  profesiId   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  dokumenUpload DokumenKredensial[]
+  
+  @@map("master_dokumen")
+}
+
+// ============================================
+// MAIN APPLICATION TABLES
+// ============================================
+
+model PengajuanKredensial {
+  id                  String   @id @default(cuid())
+  nomorPengajuan      String   @unique // Format: KRD-YYYY-000001
+  jenisPengajuan      String   // AWAL, REKREDENSIAL, PERUBAHAN_KEWENANGAN, PERUBAHAN_TEMPAT, PERUBAHAN_KOMPETENSI
+  status              String   @default("DRAFT") // DRAFT, DIAJUKAN, VERIFIKASI_PUSKESMAS, PERBAIKAN, VERIFIKASI_LENGKAP, DITERUSKAN_KE_DINAS, PENJADWALAN_ASESMEN, ASESMEN, REKOMENDASI, PENETAPAN_KEWENANGAN_KLINIS, PENUGASAN_KLINIS, SELESAI, DITOLAK, DIBATALKAN
+  tahapanSaatIni      Int      @default(1) // 1-8 untuk stepper
+  
+  // Identitas Pemohon
+  nik                 String
+  namaLengkap          String
+  gelarDepan          String?
+  gelarBelakang       String?
+  tempatLahir         String?
+  tanggalLahir        String?
+  jenisKelamin        String? // LAKI_LAKI, PEREMPUAN
+  nomorWhatsapp       String?
+  email               String?
+  
+  // Profil Profesi
+  jenisSdmk           String?
+  jenisProfesi        String?
+  jabatanFungsional   String?
+  statusKepegawaian    String? // PNS, PPPK, Non_ASN, LAINNYA
+  pangkatGolongan     String?
+  unitKerja           String?
+  puskesmasId         String?
+  profesiId           String?
+  
+  // Timestamps
+  tanggalPengajuan    DateTime?
+  tanggalSelesai      DateTime?
+  catatan             String?
+  
+  userId              String
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  user                User                    @relation(fields: [userId], references: [id])
+  puskesmas           MasterPuskesmas?         @relation(fields: [puskesmasId], references: [id])
+  profesi             MasterProfesi?          @relation(fields: [profesiId], references: [id])
+  pendidikan          Pendidikan[]
+  riwayatPekerjaan    RiwayatPekerjaan[]
+  pelatihan           Pelatihan[]
+  portofolio          Portofolio[]
+  selfAssessment      SelfAssessment[]
+  kewenanganDiajukan  KewenanganDiajukan[]
+  dokumen             DokumenKredensial[]
+  verifikasi          Verifikasi[]
+  asesmen             Asesmen[]
+  rekomendasi         Rekomendasi[]
+  penetapan           PenetapanKewenangan[]
+  penugasan           Penugasan[]
+  statusHistory       StatusHistory[]
+  
+  @@map("pengajuan_kredensial")
+}
+
+model Pendidikan {
+  id                String   @id @default(cuid())
+  pengajuanId       String
+  jenjang           String?  // D3, S1, S2, S3, PROFESI, SP1, SP2
+  programStudi      String?
+  institusi         String?
+  tahunLulus        String?
+  kompetensiUtama   String?
+  kompetensiKhusus  String?
+  keahlianKlinis    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("pendidikan")
+}
+
+model RiwayatPekerjaan {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  noUrut          Int
+  fasilitas       String?
+  jabatan         String?
+  tanggalMulai    String?
+  tanggalSelesai  String?
+  keterangan      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("riwayat_pekerjaan")
+}
+
+model Pelatihan {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  namaPelatihan   String?
+  penyelenggara   String?
+  tanggal         String?
+  tahun           String?
+  jumlahJpSkp     String?
+  nomorSertifikat String?
+  fileSertifikat  String?  // path to uploaded file
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("pelatihan")
+}
+
+model Portofolio {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  judul           String?
+  kategori        String?
+  tanggal         String?
+  deskripsi       String?
+  fileBukti       String?  // path to uploaded file
+  statusVerifikasi String? @default("BELUM") // BELUM, TERVERIFIKASI, DITOLAK
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("portofolio")
+}
+
+model SelfAssessment {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  kompetensiId    String?
+  kompetensiNama  String?
+  deskripsi       String?
+  tingkatKemampuan String? // BELUM_KOMPETEN, KOMPETEN_SUPERVISI, KOMPETEN_MANDIRI
+  bukti           String?  // JSON array of evidence types
+  keterangan      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan   PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  kompetensi  MasterKompetensi?   @relation(fields: [kompetensiId], references: [id])
+  
+  @@map("self_assessment")
+}
+
+model KewenanganDiajukan {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  kewenanganId    String?
+  kewenanganNama  String?
+  deskripsi       String?
+  tingkatDiajukan String? // MANDIRI, SUPERVISI, TIDAK_DIAJUKAN
+  alasan          String?
+  buktiPendukung  String?  // JSON array of supporting documents
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan   PengajuanKredensial     @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  kewenangan  MasterKewenanganKlinis? @relation(fields: [kewenanganId], references: [id])
+  
+  @@map("kewenangan_diajukan")
+}
+
+model DokumenKredensial {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  masterDokumenId String?
+  jenisDokumen    String?  // KTP, IJAZAH, STR, SIP, SERTIFIKAT_KOMPETENSI, dll
+  namaFile        String?
+  namaFileAsli    String?
+  ukuranFile      Int?     // in bytes
+  tipeFile        String?
+  pathFile        String?
+  status          String?  @default("BELUM") // BELUM, LENGKAP, TIDAK_VALID
+  catatan         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan     PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  masterDokumen MasterDokumen?      @relation(fields: [masterDokumenId], references: [id])
+  
+  @@map("dokumen_kredensial")
+}
+
+// ============================================
+// WORKFLOW / PROCESS TABLES
+// ============================================
+
+model Verifikasi {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  tahap           String?  // PUSKESMAS, DINAS
+  verifierId      String?
+  verifierName    String?
+  status          String?  // DALAM_PROSES, SETUJUI, TOLAK, PERBAIKI
+  catatan         String?
+  tanggalVerifikasi DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("verifikasi")
+}
+
+model Asesmen {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  asesmenId       String?
+  asesmenName     String?
+  tanggalAsesmen  String?
+  lokasi          String?
+  hasil           String?  // LULUS, TIDAK_LULUS, MENUNGGU
+  nilai           Float?
+  catatan         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("asesmen")
+}
+
+model Rekomendasi {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  timAdHocId      String?
+  timAdHocName    String?
+  tanggalRekomendasi DateTime?
+  rekomendasi     String?  // SETUJUI, TOLAK, REVISI
+  kewenanganDisarankan String? // JSON array
+  catatan         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("rekomendasi")
+}
+
+model PenetapanKewenangan {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  pimpinanId      String?
+  pimpinanName    String?
+  puskesmasId     String?
+  tanggalPenetapan DateTime?
+  kewenanganDitetapkan String? // JSON array
+  masaBerlakuMulai DateTime?
+  masaBerlakuAkhir DateTime?
+  nomorSk         String?
+  catatan         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  puskesmas MasterPuskesmas?    @relation(fields: [puskesmasId], references: [id])
+  
+  @@map("penetapan_kewenangan")
+}
+
+model Penugasan {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  tanggalPenugasan DateTime?
+  unitPenugasan   String?
+  jenisPenugasan  String?
+  supervisorId    String?
+  supervisorName  String?
+  catatan         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("penugasan")
+}
+
+model StatusHistory {
+  id              String   @id @default(cuid())
+  pengajuanId     String
+  statusSebelumnya String?
+  statusBaru      String?
+  diubahOleh      String?
+  diubahOlehName  String?
+  catatan         String?
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  pengajuan PengajuanKredensial @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+  
+  @@map("status_history")
+}
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  aksi            String?  // CREATE, READ, UPDATE, DELETE, SUBMIT, APPROVE, REJECT
+  tabel           String?
+  recordId        String?
+  dataLama        String?  // JSON string
+  dataBaru        String?  // JSON string
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+  
+  @@map("audit_log")
+}
