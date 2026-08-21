@@ -1810,8 +1810,8 @@
         // CONFIGURATION & CONSTANTS
         // ============================================
         
-        const SUPABASE_URL = 'https://tafwfgccrdjhotddoviu.supabase.co'; // Replace with your Supabase URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhZndmZ2NjcmRqaG90ZGRvdml1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyODM0NDksImV4cCI6MjEwMjg1OTQ0OX0.YMni6ZjoT9jcDgelm9TiSX4eUvV19_ZKGRcVQsxyjzE'; // Replace with your Supabase anon key
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Replace with your Supabase anon key
         
         // Initialize Supabase client (gunakan nama variabel berbeda untuk menghindari konflik)
         let _supabaseClient = null;
@@ -3001,7 +3001,14 @@
                         if (error) throw error;
                         supabaseSuccess = true;
                     } else {
-                        const userId = await getCurrentUserId();
+                        // Get user ID and ensure user exists in users table
+                        let userId = await getCurrentUserId();
+                        
+                        // Ensure user exists before inserting pengajuan
+                        userId = await ensureUserExists(userId);
+                        
+                        console.log('Saving draft with userId:', userId);
+                        
                         const { data, error } = await _supabaseClient
                             .from('pengajuan_kredensial')
                             .insert({
@@ -3051,7 +3058,9 @@
             } catch (error) {
                 console.error('Error saving draft:', error);
                 // Data already saved to localStorage via saveFormData(), so just inform user
-                showAlert('warning', 'Tersimpan Secara Local', 'Data tersimpan di browser. Error server: ' + (error.message || 'Unknown error'));
+                const errorMsg = getSupabaseErrorMessage(error);
+                showAlert('warning', 'Tersimpan Secara Local', 
+                    'Data tersimpan di browser.\n\nError server: ' + errorMsg);
             } finally {
                 showLoading(false);
             }
@@ -3079,7 +3088,14 @@
                     try {
                         // Insert or update main record
                         let pengajuanData;
-                        const userId = await getCurrentUserId();
+                        
+                        // Get user ID and ensure user exists in users table
+                        let userId = await getCurrentUserId();
+                        
+                        // Ensure user exists before inserting pengajuan
+                        userId = await ensureUserExists(userId);
+                        
+                        console.log('Submitting with userId:', userId);
                         
                         if (formData.id) {
                             const { data, error } = await _supabaseClient
@@ -3138,8 +3154,16 @@
                         showTrackingView();
                         
                     } catch (supabaseError) {
-                        console.warn('Supabase submission failed, using local mode:', supabaseError);
-                        // Fall through to local/demo mode
+                        console.warn('Supabase submission failed:', supabaseError);
+                        console.error('Full error details:', JSON.stringify(supabaseError, null, 2));
+                        
+                        // Show detailed error to help debugging
+                        const errorMsg = getSupabaseErrorMessage(supabaseError);
+                        showAlert('error', 'Error Server (Detail)', 
+                            'Terjadi kesalahan saat menyimpan ke server:\n\n' + errorMsg +
+                            '\n\nData tetap tersimpan di browser sebagai cadangan.');
+                        
+                        // Fall through to local mode
                         supabaseSuccess = false;
                     }
                 }
@@ -3158,7 +3182,7 @@
 
                     showAlert('success', 'Pengajuan Diterima (Local Mode)', 
                         `Nomor Pengajuan: ${formData.nomorPengajuan}\n\n` +
-                        `Catatan: Pengajuan tersimpan di browser. Untuk sinkronisasi ke server, pastikan koneksi dan konfigurasi Supabase sudah benar.`);
+                        `Catatan: Pengajuan tersimpan di browser. Untuk sinkronisasi ke server, jalankan SQL fix di bawah ini.`);
                     showTrackingView();
                 }
                 
@@ -3359,6 +3383,74 @@
             const realId = localStorage.getItem('kredens_real_user_id');
             const tempId = localStorage.getItem('kredens_temp_user_id');
             return realId || tempId || 'anonymous';
+        }
+
+        // ============================================
+        // SUPABASE USER MANAGEMENT
+        // ============================================
+
+        // Ensure user exists in users table before submission
+        async function ensureUserExists(userId) {
+            try {
+                if (!_supabaseClient) return userId;
+
+                // Call the RPC function to ensure user exists
+                const { data, error } = await _supabaseClient.rpc('validate_and_fix_user_id', {
+                    p_input_id: userId,
+                    p_email: formData.identitas.email || null,
+                    p_name: formData.identitas.namaLengkap || null,
+                    p_nik: formData.identitas.nik || null
+                });
+
+                if (error) {
+                    console.warn('RPC validate_and_fix_user_id failed:', error);
+                    // Fallback: try to insert user directly
+                    const { error: insertError } = await _supabaseClient
+                        .from('users')
+                        .upsert({
+                            id: userId,
+                            email: formData.identitas.email || 'anonymous@local',
+                            name: formData.identitas.namaLengkap || 'Anonymous',
+                            nik: formData.identitas.nik || null,
+                            nomor_whatsapp: formData.identitas.nomorWhatsApp || null,
+                            role: 'PEMOHON'
+                        }, {
+                            onConflict: 'id',
+                            ignoreDuplicates: true
+                        });
+                    
+                    if (insertError) {
+                        console.warn('User upsert failed:', insertError);
+                    }
+                    
+                    return userId;
+                }
+
+                return data || userId;
+            } catch (e) {
+                console.error('Error ensuring user exists:', e);
+                return userId;
+            }
+        }
+
+        // Get detailed error message from Supabase error object
+        function getSupabaseErrorMessage(error) {
+            if (!error) return 'Unknown error';
+            
+            // Extract message from various error formats
+            let message = error.message || '';
+            
+            // Add details if available
+            if (error.details) message += '\nDetails: ' + error.details;
+            if (error.hint) message += '\nHint: ' + error.hint;
+            if (error.code) message += '\nCode: ' + error.code;
+            
+            // Truncate if too long
+            if (message.length > 500) {
+                message = message.substring(0, 500) + '...';
+            }
+            
+            return message;
         }
 
         // ============================================
