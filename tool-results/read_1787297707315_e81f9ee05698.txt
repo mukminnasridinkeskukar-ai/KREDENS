@@ -1,0 +1,810 @@
+     1→"use client";
+     2→
+     3→import React, { useState, useEffect, useCallback } from "react";
+     4→import { cn } from "@/lib/utils";
+     5→import { Input } from "@/components/ui/input";
+     6→import { Label } from "@/components/ui/label";
+     7→import { Textarea } from "@/components/ui/textarea";
+     8→import {
+     9→  FormSection,
+    10→  FormFieldRow,
+    11→} from "../form-step-container";
+    12→import { FileUpload, UploadedFile } from "../file-upload";
+    13→import {
+    14→  FileCheckIcon,
+    15→  AlertTriangleIcon,
+    16→  XCircleIcon,
+    17→  CalendarIcon,
+    18→  UploadIcon,
+    19→  ShieldIcon,
+    20→  BuildingIcon,
+    21→  SaveIcon,
+    22→  CheckCircle2Icon,
+    23→  ClockIcon,
+    24→  InfoIcon,
+    25→} from "lucide-react";
+    26→
+    27→// Types for STR/SIP data
+    28→export interface StrSipData {
+    29→  // STR Data
+    30→  nomorStr: string;
+    31→  tanggalTerbitStr: string;
+    32→  tanggalBerakhirStr: string;
+    33→  strFile: UploadedFile[];
+    34→
+    35→  // SIP Data
+    36→  nomorSip: string;
+    37→  tanggalTerbitSip: string;
+    38→  tanggalBerakhirSip: string;
+    39→  sipFile: UploadedFile[];
+    40→}
+    41→
+    42→export interface StepStrSipProps {
+    43→  data: Partial<StrSipData>;
+    44→  onChange: (data: Partial<StrSipData>) => void;
+    45→  errors?: Record<string, string>;
+    46→  onSaveDraft?: () => void;
+    47→}
+    48→
+    49→// Document status types
+    50→type DocumentStatus = "valid" | "warning" | "invalid" | "empty" | "pending";
+    51→
+    52→// Initial state
+    53→const initialData: StrSipData = {
+    54→  nomorStr: "",
+    55→  tanggalTerbitStr: "",
+    56→  tanggalBerakhirStr: "",
+    57→  strFile: [],
+    58→
+    59→  nomorSip: "",
+    60→  tanggalTerbitSip: "",
+    61→  tanggalBerakhirSip: "",
+    62→  sipFile: [],
+    63→};
+    64→
+    65→// Helper function to calculate document status based on expiry date and file upload
+    66→const calculateDocumentStatus = (
+    67→  expiryDate: string | undefined,
+    68→  files: UploadedFile[] | undefined
+    69→): DocumentStatus => {
+    70→  // No file uploaded
+    71→  if (!files || files.length === 0) {
+    72→    if (!expiryDate) return "empty";
+    73→    return "warning"; // Has date but no file
+    74→  }
+    75→
+    76→  // Check if any file has error status
+    77→  const hasError = files.some((f) => f.status === "error");
+    78→  if (hasError) return "invalid";
+    79→
+    80→  // Check if all files are valid
+    81→  const allValid = files.every((f) => f.status === "valid");
+    82→  if (!allValid && !hasError) return "warning";
+    83→
+    84→  // Check expiry date
+    85→  if (expiryDate) {
+    86→    const today = new Date();
+    87→    today.setHours(0, 0, 0, 0);
+    88→    const expiry = new Date(expiryDate);
+    89→    
+    90→    // Already expired
+    91→    if (expiry < today) {
+    92→      return "invalid";
+    93→    }
+    94→
+    95→    // Calculate days until expiry
+    96→    const diffTime = expiry.getTime() - today.getTime();
+    97→    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    98→
+    99→    // Less than 6 months (180 days)
+   100→    if (diffDays <= 180) {
+   101→      return allValid ? "warning" : "empty";
+   102→    }
+   103→
+   104→    // Valid with more than 6 months
+   105→    return allValid ? "valid" : "warning";
+   106→  }
+   107→
+   108→  // Has file but no date
+   109→  return allValid ? "valid" : "warning";
+   110→};
+   111→
+   112→// Get status config
+   113→const getStatusConfig = (
+   114→  status: DocumentStatus
+   115→): {
+   116→  icon: React.ReactNode;
+   117→  label: string;
+   118→  colorClass: string;
+   119→  bgClass: string;
+   120→  borderClass: string;
+   121→} => {
+   122→  switch (status) {
+   123→    case "valid":
+   124→      return {
+   125→        icon: <CheckCircle2Icon className="h-5 w-5" />,
+   126→        label: "Dokumen valid",
+   127→        colorClass: "text-emerald-600 dark:text-emerald-400",
+   128→        bgClass: "bg-emerald-50 dark:bg-emerald-900/20",
+   129→        borderClass: "border-emerald-200 dark:border-emerald-800",
+   130→      };
+   131→    case "warning":
+   132→      return {
+   133→        icon: <AlertTriangleIcon className="h-5 w-5" />,
+   134→        label:
+   135→          "Dokumen belum diupload / akan segera berakhir",
+   136→        colorClass: "text-amber-600 dark:text-amber-400",
+   137→        bgClass: "bg-amber-50 dark:bg-amber-900/20",
+   138→        borderClass: "border-amber-200 dark:border-amber-800",
+   139→      };
+   140→    case "invalid":
+   141→      return {
+   142→        icon: <XCircleIcon className="h-5 w-5" />,
+   143→        label: "Dokumen tidak valid / sudah berakhir",
+   144→        colorClass: "text-red-600 dark:text-red-400",
+   145→        bgClass: "bg-red-50 dark:bg-red-900/20",
+   146→        borderClass: "border-red-200 dark:border-red-800",
+   147→      };
+   148→    case "empty":
+   149→    default:
+   150→      return {
+   151→        icon: <InfoIcon className="h-5 w-5" />,
+   152→        label: "Belum diisi",
+   153→        colorClass: "text-slate-500 dark:text-slate-400",
+   154→        bgClass: "bg-slate-50 dark:bg-slate-800",
+   155→        borderClass: "border-slate-200 dark:border-slate-700",
+   156→      }
+   157→  }
+   158→};
+   159→
+   160→// Calculate days until expiry
+   161→const getDaysUntilExpiry = (expiryDate: string): number | null => {
+   162→  if (!expiryDate) return null;
+   163→  
+   164→  const today = new Date();
+   165→  today.setHours(0, 0, 0, 0);
+   166→  const expiry = new Date(expiryDate);
+   167→  
+   168→  const diffTime = expiry.getTime() - today.getTime();
+   169→  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+   170→};
+   171→
+   172→// Format date to Indonesian locale
+   173→const formatDateIndo = (dateStr: string): string => {
+   174→  if (!dateStr) return "-";
+   175→  
+   176→  const date = new Date(dateStr);
+   177→  return date.toLocaleDateString("id-ID", {
+   178→    day: "numeric",
+   179→    month: "long",
+   180→    year: "numeric",
+   181→  });
+   182→};
+   183→
+   184→export function StepStrSip({
+   185→  data = initialData,
+   186→  onChange,
+   187→  errors = {},
+   188→  onSaveDraft,
+   189→}: StepStrSipProps) {
+   190→  // Local state for form fields
+   191→  const [formData, setFormData] = useState<Partial<StrSipData>>({
+   192→    ...initialData,
+   193→    ...data,
+   194→  });
+   195→
+   196→  // Validation state
+   197→  const [validationErrors, setValidationErrors] =
+   198→    useState<Record<string, string>>(errors);
+   199→
+   200→  // Auto-save draft timer
+   201→  const [draftSaved, setDraftSaved] = useState(false);
+   202→  const [autoSaveTimer, setAutoSaveTimer] =
+   203→    useState<NodeJS.Timeout | null>(null);
+   204→
+   205→  // Calculate document statuses
+   206→  const strStatus = calculateDocumentStatus(
+   207→    formData.tanggalBerakhirStr,
+   208→    formData.strFile
+   209→  );
+   210→  const sipStatus = calculateDocumentStatus(
+   211→    formData.tanggalBerakhirSip,
+   212→    formData.sipFile
+   213→  );
+   214→
+   215→  // Sync external data changes
+   216→  useEffect(() => {
+   217→    if (data && Object.keys(data).length > 0) {
+   218→      setFormData((prev) => ({ ...prev, ...data }));
+   219→    }
+   220→  }, [data]);
+   221→
+   222→  // Sync external errors
+   223→  useEffect(() => {
+   224→    setValidationErrors(errors);
+   225→  }, [errors]);
+   226→
+   227→  // Auto-save draft functionality
+   228→  const triggerAutoSave = useCallback(
+   229→    (newData: Partial<StrSipData>) => {
+   230→      if (autoSaveTimer) {
+   231→        clearTimeout(autoSaveTimer);
+   232→      }
+   233→
+   234→      const timer = setTimeout(() => {
+   235→        onChange(newData);
+   236→        if (onSaveDraft) {
+   237→          onSaveDraft();
+   238→          setDraftSaved(true);
+   239→          setTimeout(() => setDraftSaved(false), 2000);
+   240→        }
+   241→      }, 1500);
+   242→
+   243→      setAutoSaveTimer(timer);
+   244→    },
+   245→    [autoSaveTimer, onChange, onSaveDraft]
+   246→  );
+   247→
+   248→  // Cleanup timer on unmount
+   249→  useEffect(() => {
+   250→    return () => {
+   251→      if (autoSaveTimer) {
+   252→        clearTimeout(autoSaveTimer);
+   253→      }
+   254→    };
+   255→  }, [autoSaveTimer]);
+   256→
+   257→  // Handle field change
+   258→  const handleChange = useCallback(
+   259→    (field: keyof StrSipData, value: string | UploadedFile[]) => {
+   260→      const newData = { ...formData, [field]: value };
+   261→      setFormData(newData);
+   262→
+   263→      // Clear validation error on change
+   264→      if (validationErrors[field]) {
+   265→        setValidationErrors((prev) => {
+   266→          const next = { ...prev };
+   267→          delete next[field];
+   268→          return next;
+   269→        });
+   270→      }
+   271→
+   272→      // Trigger auto-save
+   273→      triggerAutoSave(newData);
+   274→    },
+   275→    [formData, validationErrors, triggerAutoSave]
+   276→  );
+   277→
+   278→  // Validate specific field
+   279→  const validateField = useCallback(
+   280→    (field: keyof StrSipData, value: string): string | null => {
+   281→      switch (field) {
+   282→        case "nomorStr":
+   283→          if (!value || value.trim() === "") return "Nomor STR wajib diisi";
+   284→          return null;
+   285→        case "nomorSip":
+   286→          if (!value || value.trim() === "") return "Nomor SIP wajib diisi";
+   287→          return null;
+   288→        case "tanggalTerbitStr":
+   289→          if (!value) return "Tanggal terbit STR wajib diisi";
+   290→          return null;
+   291→        case "tanggalBerakhirStr":
+   292→          if (!value) return "Tanggal berakhir STR wajib diisi";
+   293→          return null;
+   294→        case "tanggalTerbitSip":
+   295→          if (!value) return "Tanggal terbit SIP wajib diisi";
+   296→          return null;
+   297→        case "tanggalBerakhirSip":
+   298→          if (!value) return "Tanggal berakhir SIP wajib diisi";
+   299→          return null;
+   300→        default:
+   301→          return null;
+   302→      }
+   303→    },
+   304→    []
+   305→  );
+   306→
+   307→  // Handle blur for inline validation
+   308→  const handleBlur = useCallback(
+   309→    (field: keyof StrSipData, value: string) => {
+   310→      const error = validateField(field, value);
+   311→      if (error) {
+   312→        setValidationErrors((prev) => ({ ...prev, [field]: error }));
+   313→      }
+   314→    },
+   315→    [validateField]
+   316→  );
+   317→
+   318→  // Get field error or empty string
+   319→  const getFieldError = (field: string): string => {
+   320→    return validationErrors[field] || "";
+   321→  };
+   322→
+   323→  // Check if field has error
+   324→  const hasError = (field: string): boolean => {
+   325→    return !!validationErrors[field];
+   326→  };
+   327→
+   328→  // Status indicator component
+   329→  const StatusIndicator = ({
+   330→    status,
+   331→    daysUntilExpiry,
+   332→  }: {
+   333→    status: DocumentStatus;
+   334→    daysUntilExpiry: number | null;
+   335→  }) => {
+   336→    const config = getStatusConfig(status);
+   337→
+   338→    return (
+   339→      <div
+   340→        className={cn(
+   341→          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
+   342→          config.bgClass,
+   343→          config.borderClass,
+   344→          "border"
+   345→        )}
+   346→      >
+   347→        <span className={config.colorClass}>{config.icon}</span>
+   348→        <span className={cn("font-medium", config.colorClass)}>
+   349→          {config.label}
+   350→        </span>
+   351→        {daysUntilExpiry !== null && daysUntilExpiry >= 0 && (
+   352→          <span className={cn("ml-auto text-xs", config.colorClass)}>
+   353→            <ClockIcon className="inline h-3.5 w-3.5 mr-1" />
+   354→            {daysUntilExpiry} hari lagi
+   355→          </span>
+   356→        )}
+   357→        {daysUntilExpiry !== null && daysUntilExpiry < 0 && (
+   358→          <span className="ml-auto text-xs text-red-600 font-medium">
+   359→            Berlalu {Math.abs(daysUntilExpiry)} hari yang lalu
+   360→          </span>
+   361→        )}
+   362→      </div>
+   363→    );
+   364→  };
+   365→
+   366→  // Expiry warning component
+   367→  const ExpiryWarning = ({ days }: { days: number | null }) => {
+   368→    if (days === null || days > 180) return null;
+   369→
+   370→    return (
+   371→      <div
+   372→        className={cn(
+   373→          "mt-2 p-3 rounded-lg flex items-start gap-2 text-sm",
+   374→          days < 0
+   375→            ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+   376→            : "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300"
+   377→        )}
+   378→      >
+   379→        <AlertTriangleIcon className="h-5 w-5 shrink-0 mt-0.5" />
+   380→        <div>
+   381→          {days < 0 ? (
+   382→            <>
+   383→              <p className="font-medium">Dokumen Sudah Berakhir!</p>
+   384→              <p className="text-xs mt-0.5">
+   385→                Dokumen ini telah berakhir{" "}
+   386→                <strong>{Math.abs(days)} hari</strong> yang lalu.
+   387→                Segera perbarui dokumen Anda.
+   388→              </p>
+   389→            </>
+   390→          ) : (
+   391→            <>
+   392→              <p className="font-medium">Peringatan Masa Berlaku</p>
+   393→              <p className="text-xs mt-0.5">
+   394→                Dokumen ini akan berakhir dalam{" "}
+   395→                <strong>{days} hari</strong> (kurang dari 6 bulan).
+   396→                Segera lakukan perpanjangan jika diperlukan.
+   397→              </p>
+   398→            </>
+   399→          )}
+   400→        </div>
+   401→      </div>
+   402→    );
+   403→  };
+   404→
+   405→  return (
+   406→    <div className="space-y-6">
+   407→      {/* STR Section */}
+   408→      <FormSection
+   409→        title={
+   410→          <div className="flex items-center gap-2">
+   411→            <ShieldIcon className="h-5 w-5 text-[#1e3a5f]" />
+   412→            Surat Tanda Registrasi (STR)
+   413→          </div>
+   414→        }
+   415→        description="Upload dokumen STR yang masih berlaku dari Kemenkes"
+   416→        className={cn(
+   417→          strStatus === "invalid" && "ring-2 ring-red-300 dark:ring-red-800",
+   418→          strStatus === "warning" && "ring-2 ring-amber-300 dark:ring-amber-800"
+   419→        )}
+   420→      >
+   421→        {/* STR Number & Status Row */}
+   422→        <div className="space-y-4">
+   423→          {/* Nomor STR */}
+   424→          <div className="space-y-2">
+   425→            <Label htmlFor="nomorStr">
+   426→              Nomor STR
+   427→              <span className="text-red-500 ml-1">*</span>
+   428→            </Label>
+   429→            <Input
+   430→              id="nomorStr"
+   431→              placeholder="Contoh: 1234567890123456"
+   432→              value={formData.nomorStr || ""}
+   433→              onChange={(e) => handleChange("nomorStr", e.target.value)}
+   434→              onBlur={() => handleBlur("nomorStr", formData.nomorStr || "")}
+   435→              className={cn(
+   436→                hasError("nomorStr") &&
+   437→                  "border-red-500 focus-visible:ring-red-500"
+   438→              )}
+   439→            />
+   440→            {hasError("nomorStr") && (
+   441→              <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   442→                <XCircleIcon className="h-4 w-4" />
+   443→                {getFieldError("nomorStr")}
+   444→              </p>
+   445→            )}
+   446→          </div>
+   447→
+   448→          {/* Date Fields */}
+   449→          <FormFieldRow columns={2}>
+   450→            {/* Tanggal Terbit STR */}
+   451→            <div className="space-y-2">
+   452→              <Label htmlFor="tanggalTerbitStr">
+   453→                Tanggal Terbit
+   454→                <span className="text-red-500 ml-1">*</span>
+   455→              </Label>
+   456→              <div className="relative">
+   457→                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   458→                <Input
+   459→                  id="tanggalTerbitStr"
+   460→                  type="date"
+   461→                  value={formData.tanggalTerbitStr || ""}
+   462→                  onChange={(e) =>
+   463→                    handleChange("tanggalTerbitStr", e.target.value)
+   464→                  }
+   465→                  onBlur={() =>
+   466→                    handleBlur(
+   467→                      "tanggalTerbitStr",
+   468→                      formData.tanggalTerbitStr || ""
+   469→                    )
+   470→                  }
+   471→                  className={cn(
+   472→                    "pl-10",
+   473→                    hasError("tanggalTerbitStr") &&
+   474→                      "border-red-500 focus-visible:ring-red-500"
+   475→                  )}
+   476→                  max={new Date().toISOString().split("T")[0]}
+   477→                />
+   478→              </div>
+   479→              {hasError("tanggalTerbitStr") && (
+   480→                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   481→                  <XCircleIcon className="h-4 w-4" />
+   482→                  {getFieldError("tanggalTerbitStr")}
+   483→                </p>
+   484→              )}
+   485→            </div>
+   486→
+   487→            {/* Tanggal Berakhir STR */}
+   488→            <div className="space-y-2">
+   489→              <Label htmlFor="tanggalBerakhirStr">
+   490→                Tanggal Berakhir
+   491→                <span className="text-red-500 ml-1">*</span>
+   492→              </Label>
+   493→              <div className="relative">
+   494→                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   495→                <Input
+   496→                  id="tanggalBerakhirStr"
+   497→                  type="date"
+   498→                  value={formData.tanggalBerakhirStr || ""}
+   499→                  onChange={(e) =>
+   500→                    handleChange("tanggalBerakhirStr", e.target.value)
+   501→                  }
+   502→                  onBlur={() =>
+   503→                    handleBlur(
+   504→                      "tanggalBerakhirStr",
+   505→                      formData.tanggalBerakhirStr || ""
+   506→                    )
+   507→                  }
+   508→                  className={cn(
+   509→                    "pl-10",
+   510→                    hasError("tanggalBerakhirStr") &&
+   511→                      "border-red-500 focus-visible:ring-red-500"
+   512→                  )}
+   513→                  min={
+   514→                    formData.tanggalTerbitStr ||
+   515→                    new Date().toISOString().split("T")[0]
+   516→                  }
+   517→                />
+   518→              </div>
+   519→              {hasError("tanggalBerakhirStr") && (
+   520→                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   521→                  <XCircleIcon className="h-4 w-4" />
+   522→                  {getFieldError("tanggalBerakhirStr")}
+   523→                </p>
+   524→              )}
+   525→            </div>
+   526→          </FormFieldRow>
+   527→
+   528→          {/* Expiry Warning */}
+   529→          <ExpiryWarning days={getDaysUntilExpiry(formData.tanggalBerakhirStr || "")} />
+   530→
+   531→          {/* STR File Upload */}
+   532→          <div className="mt-4">
+   533→            <FileUpload
+   534→              label="Unggah Dokumen STR"
+   535→              description="Format: PDF, JPG, JPEG, PNG. Maksimal 10MB. Pastikan dokumen jelas dan terbaca."
+   536→              value={formData.strFile || []}
+   537→              onChange={(files) => handleChange("strFile", files)}
+   538→              accept={[
+   539→                "application/pdf",
+   540→                "image/jpeg",
+   541→                "image/jpg",
+   542→                "image/png",
+   543→              ]}
+   544→              maxSize={10 * 1024 * 1024}
+   545→              multiple={false}
+   546→              required
+   547→              error={errors?.strFile}
+   548→            />
+   549→          </div>
+   550→
+   551→          {/* STR Status Indicator */}
+   552→          <StatusIndicator
+   553→            status={strStatus}
+   554→            daysUntilExpiry={getDaysUntilExpiry(formData.tanggalBerakhirStr || "")}
+   555→          />
+   556→        </div>
+   557→      </FormSection>
+   558→
+   559→      {/* SIP Section */}
+   560→      <FormSection
+   561→        title={
+   562→          <div className="flex items-center gap-2">
+   563→            <BuildingIcon className="h-5 w-5 text-[#1e3a5f]" />
+   564→            Izin Praktik (SIP)
+   565→          </div>
+   566→        }
+   567→        description="Upload dokumen SIP yang diterbitkan oleh Dinkes/Dinas Kesehatan setempat"
+   568→        className={cn(
+   569→          sipStatus === "invalid" && "ring-2 ring-red-300 dark:ring-red-800",
+   570→          sipStatus === "warning" && "ring-2 ring-amber-300 dark:ring-amber-800"
+   571→        )}
+   572→      >
+   573→        {/* SIP Number & Status Row */}
+   574→        <div className="space-y-4">
+   575→          {/* Nomor SIP */}
+   576→          <div className="space-y-2">
+   577→            <Label htmlFor="nomorSip">
+   578→              Nomor SIP
+   579→              <span className="text-red-500 ml-1">*</span>
+   580→            </Label>
+   581→            <Input
+   582→              id="nomorSip"
+   583→              placeholder="Contoh: SIP.001/2024/DINKES"
+   584→              value={formData.nomorSip || ""}
+   585→              onChange={(e) => handleChange("nomorSip", e.target.value)}
+   586→              onBlur={() => handleBlur("nomorSip", formData.nomorSip || "")}
+   587→              className={cn(
+   588→                hasError("nomorSip") &&
+   589→                  "border-red-500 focus-visible:ring-red-500"
+   590→              )}
+   591→            />
+   592→            {hasError("nomorSip") && (
+   593→              <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   594→                <XCircleIcon className="h-4 w-4" />
+   595→                {getFieldError("nomorSip")}
+   596→              </p>
+   597→            )}
+   598→          </div>
+   599→
+   600→          {/* Date Fields */}
+   601→          <FormFieldRow columns={2}>
+   602→            {/* Tanggal Terbit SIP */}
+   603→            <div className="space-y-2">
+   604→              <Label htmlFor="tanggalTerbitSip">
+   605→                Tanggal Terbit
+   606→                <span className="text-red-500 ml-1">*</span>
+   607→              </Label>
+   608→              <div className="relative">
+   609→                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   610→                <Input
+   611→                  id="tanggalTerbitSip"
+   612→                  type="date"
+   613→                  value={formData.tanggalTerbitSip || ""}
+   614→                  onChange={(e) =>
+   615→                    handleChange("tanggalTerbitSip", e.target.value)
+   616→                  }
+   617→                  onBlur={() =>
+   618→                    handleBlur(
+   619→                      "tanggalTerbitSip",
+   620→                      formData.tanggalTerbitSip || ""
+   621→                    )
+   622→                  }
+   623→                  className={cn(
+   624→                    "pl-10",
+   625→                    hasError("tanggalTerbitSip") &&
+   626→                      "border-red-500 focus-visible:ring-red-500"
+   627→                  )}
+   628→                  max={new Date().toISOString().split("T")[0]}
+   629→                />
+   630→              </div>
+   631→              {hasError("tanggalTerbitSip") && (
+   632→                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   633→                  <XCircleIcon className="h-4 w-4" />
+   634→                  {getFieldError("tanggalTerbitSip")}
+   635→                </p>
+   636→              )}
+   637→            </div>
+   638→
+   639→            {/* Tanggal Berakhir SIP */}
+   640→            <div className="space-y-2">
+   641→              <Label htmlFor="tanggalBerakhirSip">
+   642→                Tanggal Berakhir
+   643→                <span className="text-red-500 ml-1">*</span>
+   644→              </Label>
+   645→              <div className="relative">
+   646→                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+   647→                <Input
+   648→                  id="tanggalBerakhirSip"
+   649→                  type="date"
+   650→                  value={formData.tanggalBerakhirSip || ""}
+   651→                  onChange={(e) =>
+   652→                    handleChange("tanggalBerakhirSip", e.target.value)
+   653→                  }
+   654→                  onBlur={() =>
+   655→                    handleBlur(
+   656→                      "tanggalBerakhirSip",
+   657→                      formData.tanggalBerakhirSip || ""
+   658→                    )
+   659→                  }
+   660→                  className={cn(
+   661→                    "pl-10",
+   662→                    hasError("tanggalBerakhirSip") &&
+   663→                      "border-red-500 focus-visible:ring-red-500"
+   664→                  )}
+   665→                  min={
+   666→                    formData.tanggalTerbitSip ||
+   667→                    new Date().toISOString().split("T")[0]
+   668→                  }
+   669→                />
+   670→              </div>
+   671→              {hasError("tanggalBerakhirSip") && (
+   672→                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+   673→                  <XCircleIcon className="h-4 w-4" />
+   674→                  {getFieldError("tanggalBerakhirSip")}
+   675→                </p>
+   676→              )}
+   677→            </div>
+   678→          </FormFieldRow>
+   679→
+   680→          {/* Expiry Warning */}
+   681→          <ExpiryWarning days={getDaysUntilExpiry(formData.tanggalBerakhirSip || "")} />
+   682→
+   683→          {/* SIP File Upload */}
+   684→          <div className="mt-4">
+   685→            <FileUpload
+   686→              label="Unggah Dokumen SIP"
+   687→              description="Format: PDF, JPG, JPEG, PNG. Maksimal 10MB. Pastikan dokumen jelas dan terbaca."
+   688→              value={formData.sipFile || []}
+   689→              onChange={(files) => handleChange("sipFile", files)}
+   690→              accept={[
+   691→                "application/pdf",
+   692→                "image/jpeg",
+   693→                "image/jpg",
+   694→                "image/png",
+   695→              ]}
+   696→              maxSize={10 * 1024 * 1024}
+   697→              multiple={false}
+   698→              required
+   699→              error={errors?.sipFile}
+   700→            />
+   701→          </div>
+   702→
+   703→          {/* SIP Status Indicator */}
+   704→          <StatusIndicator
+   705→            status={sipStatus}
+   706→            daysUntilExpiry={getDaysUntilExpiry(formData.tanggalBerakhirSip || "")}
+   707→          />
+   708→        </div>
+   709→      </FormSection>
+   710→
+   711→      {/* Summary Section */}
+   712→      <div className="rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 p-4 md:p-6">
+   713→        <h4 className="font-semibold text-sm text-[#1e3a5f] dark:text-teal-400 mb-4 flex items-center gap-2">
+   714→          <FileCheckIcon className="h-5 w-5" />
+   715→          Ringkasan Status Dokumen
+   716→        </h4>
+   717→        
+   718→        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   719→          {/* STR Summary */}
+   720→          <div
+   721→            className={cn(
+   722→              "p-4 rounded-lg border",
+   723→              getStatusConfig(strStatus).bgClass,
+   724→              getStatusConfig(strStatus).borderClass
+   725→            )}
+   726→          >
+   727→            <div className="flex items-center justify-between mb-2">
+   728→              <span className="font-medium text-sm">Surat Tanda Registrasi</span>
+   729→              <span className={getStatusConfig(strStatus).colorClass}>
+   730→                {getStatusConfig(strStatus).icon}
+   731→              </span>
+   732→            </div>
+   733→            <div className="text-sm space-y-1">
+   734→              <p className="text-slate-600 dark:text-slate-400">
+   735→                Nomor: <strong>{formData.nomorStr || "-"}</strong>
+   736→              </p>
+   737→              <p className="text-slate-600 dark:text-slate-400">
+   738→                Berlaku s/d: <strong>{formatDateIndo(formData.tanggalBerakhirStr || "")}</strong>
+   739→              </p>
+   740→              <p className="text-slate-600 dark:text-slate-400">
+   741→                Dokumen: <strong>{formData.strFile?.length ? `${formData.strFile.length} file` : "Belum upload"}</strong>
+   742→              </p>
+   743→            </div>
+   744→          </div>
+   745→
+   746→          {/* SIP Summary */}
+   747→          <div
+   748→            className={cn(
+   749→              "p-4 rounded-lg border",
+   750→              getStatusConfig(sipStatus).bgClass,
+   751→              getStatusConfig(sipStatus).borderClass
+   752→            )}
+   753→          >
+   754→            <div className="flex items-center justify-between mb-2">
+   755→              <span className="font-medium text-sm">Izin Praktik</span>
+   756→              <span className={getStatusConfig(sipStatus).colorClass}>
+   757→                {getStatusConfig(sipStatus).icon}
+   758→              </span>
+   759→            </div>
+   760→            <div className="text-sm space-y-1">
+   761→              <p className="text-slate-600 dark:text-slate-400">
+   762→                Nomor: <strong>{formData.nomorSip || "-"}</strong>
+   763→              </p>
+   764→              <p className="text-slate-600 dark:text-slate-400">
+   765→                Berlaku s/d: <strong>{formatDateIndo(formData.tanggalBerakhirSip || "")}</strong>
+   766→              </p>
+   767→              <p className="text-slate-600 dark:text-slate-400">
+   768→                Dokumen: <strong>{formData.sipFile?.length ? `${formData.sipFile.length} file` : "Belum upload"}</strong>
+   769→              </p>
+   770→            </div>
+   771→          </div>
+   772→        </div>
+   773→      </div>
+   774→
+   775→      {/* Important Notes */}
+   776→      <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 md:p-6">
+   777→        <div className="flex gap-3">
+   778→          <InfoIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+   779→          <div>
+   780→            <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-300 mb-2">
+   781→              Penting!
+   782→            </h4>
+   783→            <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1.5 list-disc list-inside">
+   784→              <li>Pastikan dokumen STR dan SIP masih berlaku saat pengajuan kredensial</li>
+   785→              <li>Dokumen yang akan segera berakhir (&lt; 6 bulan) akan ditandai dengan peringatan</li>
+   786→              <li>Upload dokumen dalam format yang jelas dan mudah dibaca</li>
+   787→              <li>Dokumen palsu atau dimanipulasi akan menyebabkan penolakan kredensial</li>
+   788→            </ul>
+   789→          </div>
+   790→        </div>
+   791→      </div>
+   792→
+   793→      {/* Auto-save indicator */}
+   794→      <div
+   795→        className={cn(
+   796→          "fixed bottom-6 right-6 z-50 px-4 py-2 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2 text-sm font-medium",
+   797→          draftSaved
+   798→            ? "bg-emerald-500 text-white translate-y-0 opacity-100"
+   799→            : "bg-slate-100 dark:bg-slate-800 text-slate-500 translate-y-2 opacity-0 pointer-events-none"
+   800→        )}
+   801→      >
+   802→        <SaveIcon className="h-4 w-4" />
+   803→        Draft tersimpan
+   804→      </div>
+   805→    </div>
+   806→  );
+   807→}
+   808→
+   809→export default StepStrSip;
+   810→
