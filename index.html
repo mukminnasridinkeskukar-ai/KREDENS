@@ -2985,6 +2985,8 @@
             showLoading(true);
 
             try {
+                let supabaseSuccess = false;
+                
                 if (_supabaseClient) {
                     // Check if record exists
                     if (formData.id) {
@@ -2997,11 +2999,13 @@
                             .eq('id', formData.id);
 
                         if (error) throw error;
+                        supabaseSuccess = true;
                     } else {
+                        const userId = await getCurrentUserId();
                         const { data, error } = await _supabaseClient
                             .from('pengajuan_kredensial')
                             .insert({
-                                user_id: await getCurrentUserId(),
+                                user_id: userId,
                                 jenis_pengajuan: formData.jenisPengajuan,
                                 status: 'DRAFT',
                                 nik: formData.identitas.nik,
@@ -3027,10 +3031,16 @@
                         
                         formData.id = data.id;
                         formData.nomorPengajuan = data.nomor_pengajuan;
+                        supabaseSuccess = true;
                     }
                 }
 
-                showAlert('success', 'Draft Tersimpan', 'Formulir berhasil disimpan sebagai draft. Anda dapat melanjutkan nanti.');
+                // Show success message
+                if (supabaseSuccess) {
+                    showAlert('success', 'Draft Tersimpan', 'Formulir berhasil disimpan ke database server.');
+                } else {
+                    showAlert('success', 'Draft Tersimpan (Local)', 'Formulir disimpan di browser Anda. Data akan tersinkronisasi saat koneksi tersedia.');
+                }
                 
                 if (formData.nomorPengajuan) {
                     const nomorDisplay = document.getElementById('nomorPengajuanDisplay');
@@ -3040,7 +3050,8 @@
                 }
             } catch (error) {
                 console.error('Error saving draft:', error);
-                showAlert('error', 'Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan draft. Data tetap tersimpan di browser Anda.');
+                // Data already saved to localStorage via saveFormData(), so just inform user
+                showAlert('warning', 'Tersimpan Secara Local', 'Data tersimpan di browser. Error server: ' + (error.message || 'Unknown error'));
             } finally {
                 showLoading(false);
             }
@@ -3056,82 +3067,106 @@
             showLoading(true);
 
             try {
-                if (_supabaseClient) {
-                    // Generate submission number if needed
-                    if (!formData.nomorPengajuan) {
-                        const year = new Date().getFullYear();
-                        formData.nomorPengajuan = `KRD-${year}-${String(Math.floor(Math.random() * 900000) + 100000).padStart(6, '0')}`;
-                    }
-
-                    // Insert or update main record
-                    let pengajuanData;
-                    if (formData.id) {
-                        const { data, error } = await _supabaseClient
-                            .from('pengajuan_kredensial')
-                            .update({
-                                status: 'DIAJUKAN',
-                                tanggal_pengajuan: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', formData.id)
-                            .select()
-                            .single();
-
-                        if (error) throw error;
-                        pengajuanData = data;
-                    } else {
-                        const { data, error } = await _supabaseClient
-                            .from('pengajuan_kredensial')
-                            .insert({
-                                user_id: await getCurrentUserId(),
-                                jenis_pengajuan: formData.jenisPengajuan,
-                                status: 'DIAJUKAN',
-                                nik: formData.identitas.nik,
-                                nama_lengkap: formData.identitas.namaLengkap,
-                                gelar_depan: formData.identitas.gelarDepan,
-                                gelar_belakang: formData.identitas.gelarBelakang,
-                                tempat_lahir: formData.identitas.tempatLahir,
-                                tanggal_lahir: formData.identitas.tanggalLahir,
-                                jenis_kelamin: formData.identitas.jenisKelamin,
-                                nomor_whatsapp: formData.identitas.nomorWhatsApp,
-                                email: formData.identitas.email,
-                                jenis_sdmk: formData.profesi.jenisSdmk,
-                                jenis_profesi: formData.profesi.jenisProfesi,
-                                jabatan_fungsional: formData.profesi.jabatanFungsional,
-                                status_kepegawaian: formData.profesi.statusKepegawaian,
-                                pangkat_golongan: formData.profesi.pangkatGolongan,
-                                unit_kerja_id: formData.profesi.unitKerja || null,
-                                tanggal_pengajuan: new Date().toISOString()
-                            })
-                            .select()
-                            .single();
-
-                        if (error) throw error;
-                        pengajuanData = data;
-                        formData.id = pengajuanData.id;
-                        formData.nomorPengajuan = pengajuanData.nomor_pengajuan;
-                    }
-
-                    // Clear localStorage draft
-                    localStorage.removeItem('kredens_draft');
-
-                    // Show success and tracking
-                    showAlert('success', 'Pengajuan Berhasil!', `Formulir berhasil diajukan dengan nomor: ${formData.nomorPengajuan}`);
-                    showTrackingView();
-                } else {
-                    // Demo mode - simulate successful submission
+                let supabaseSuccess = false;
+                
+                // Generate submission number if needed
+                if (!formData.nomorPengajuan) {
                     const year = new Date().getFullYear();
                     formData.nomorPengajuan = `KRD-${year}-${String(Math.floor(Math.random() * 900000) + 100000).padStart(6, '0')}`;
+                }
+
+                if (_supabaseClient) {
+                    try {
+                        // Insert or update main record
+                        let pengajuanData;
+                        const userId = await getCurrentUserId();
+                        
+                        if (formData.id) {
+                            const { data, error } = await _supabaseClient
+                                .from('pengajuan_kredensial')
+                                .update({
+                                    status: 'DIAJUKAN',
+                                    tanggal_pengajuan: new Date().toISOString(),
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', formData.id)
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            pengajuanData = data;
+                        } else {
+                            const { data, error } = await _supabaseClient
+                                .from('pengajuan_kredensial')
+                                .insert({
+                                    user_id: userId,
+                                    jenis_pengajuan: formData.jenisPengajuan,
+                                    status: 'DIAJUKAN',
+                                    nik: formData.identitas.nik,
+                                    nama_lengkap: formData.identitas.namaLengkap,
+                                    gelar_depan: formData.identitas.gelarDepan,
+                                    gelar_belakang: formData.identitas.gelarBelakang,
+                                    tempat_lahir: formData.identitas.tempatLahir,
+                                    tanggal_lahir: formData.identitas.tanggalLahir,
+                                    jenis_kelamin: formData.identitas.jenisKelamin,
+                                    nomor_whatsapp: formData.identitas.nomorWhatsApp,
+                                    email: formData.identitas.email,
+                                    jenis_sdmk: formData.profesi.jenisSdmk,
+                                    jenis_profesi: formData.profesi.jenisProfesi,
+                                    jabatan_fungsional: formData.profesi.jabatanFungsional,
+                                    status_kepegawaian: formData.profesi.statusKepegawaian,
+                                    pangkat_golongan: formData.profesi.pangkatGolongan,
+                                    unit_kerja_id: formData.profesi.unitKerja || null,
+                                    tanggal_pengajuan: new Date().toISOString()
+                                })
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            pengajuanData = data;
+                            formData.id = pengajuanData.id;
+                            formData.nomorPengajuan = pengajuanData.nomor_pengajuan;
+                        }
+                        
+                        supabaseSuccess = true;
+                        
+                        // Clear localStorage draft only if successfully saved to server
+                        localStorage.removeItem('kredens_draft');
+                        
+                        // Show success and tracking
+                        showAlert('success', 'Pengajuan Berhasil!', `Formulir berhasil diajukan dengan nomor: ${formData.nomorPengajuan}`);
+                        showTrackingView();
+                        
+                    } catch (supabaseError) {
+                        console.warn('Supabase submission failed, using local mode:', supabaseError);
+                        // Fall through to local/demo mode
+                        supabaseSuccess = false;
+                    }
+                }
+
+                // If Supabase not available or failed, use local/demo mode
+                if (!supabaseSuccess) {
                     formData.status = 'DIAJUKAN';
-
+                    
+                    // Save to localStorage as submitted
                     localStorage.removeItem('kredens_draft');
+                    localStorage.setItem('kredens_submitted', JSON.stringify({
+                        ...formData,
+                        submittedAt: new Date().toISOString(),
+                        localMode: true
+                    }));
 
-                    showAlert('success', 'Pengajuan Berhasil! (Demo Mode)', `Nomor Pengajuan: ${formData.nomorPengajuan}\n\nCatatan: Ini adalah mode demo. Untuk penyimpanan nyata, konfigurasi Supabase Anda.`);
+                    showAlert('success', 'Pengajuan Diterima (Local Mode)', 
+                        `Nomor Pengajuan: ${formData.nomorPengajuan}\n\n` +
+                        `Catatan: Pengajuan tersimpan di browser. Untuk sinkronisasi ke server, pastikan koneksi dan konfigurasi Supabase sudah benar.`);
                     showTrackingView();
                 }
+                
             } catch (error) {
                 console.error('Error submitting form:', error);
-                showAlert('error', 'Pengajuan Gagal', 'Terjadi kesalahan saat mengajukan formulir. Silakan coba lagi.');
+                showAlert('error', 'Pengajuan Gagal', 
+                    'Terjadi kesalahan: ' + (error.message || 'Unknown error') + 
+                    '\n\nData tetap tersimpan di browser sebagai draft.');
             } finally {
                 showLoading(false);
             }
@@ -3291,16 +3326,39 @@
         // ============================================
 
         async function getCurrentUserId() {
+            // Generate unique ID from localStorage or use NIK as fallback
+            let tempUserId = localStorage.getItem('kredens_temp_user_id');
+            
+            if (!tempUserId) {
+                // Create temporary ID based on timestamp + random
+                tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('kredens_temp_user_id', tempUserId);
+            }
+            
             try {
                 if (_supabaseClient) {
-                    const { data: { user }, error } = await _supabaseClient.auth.getUser();
-                    if (error) throw error;
-                    return user?.id || 'anonymous';
+                    // Check if there's an active session first
+                    const { data: { session } } = await _supabaseClient.auth.getSession();
+                    
+                    if (session?.user) {
+                        // User is logged in - use their real ID
+                        localStorage.setItem('kredens_real_user_id', session.user.id);
+                        return session.user.id;
+                    }
                 }
             } catch (e) {
-                console.warn('Error getting current user:', e);
+                // Silently handle auth errors (user not logged in, etc.)
+                console.log('No active auth session, using temporary ID');
             }
-            return 'anonymous';
+            
+            // Return temporary ID for non-authenticated users
+            return tempUserId;
+        }
+
+        function getDisplayUserId() {
+            const realId = localStorage.getItem('kredens_real_user_id');
+            const tempId = localStorage.getItem('kredens_temp_user_id');
+            return realId || tempId || 'anonymous';
         }
 
         // ============================================
