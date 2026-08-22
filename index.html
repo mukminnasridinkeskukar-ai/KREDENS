@@ -2201,6 +2201,24 @@
          JAVASCRIPT
          ============================================ -->
     <script>
+        // ============================================
+        // CONFIGURATION & CONSTANTS
+        // ============================================
+
+        const SUPABASE_URL = 'https://tafwfgccrdjhotddoviu.supabase.co'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhZndmZ2NjcmRqaG90ZGRvdml1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyODM0NDksImV4cCI6MjEwMjg1OTQ0OX0.YMni6ZjoT9jcDgelm9TiSX4eUvV19_ZKGRcVQsxyjzE'; // Replace with your Supabase anon key
+
+        // Initialize Supabase client (gunakan nama variabel berbeda untuk menghindari konflik)
+        let _supabaseClient = null;
+
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (error) {
+            console.error('Failed to initialize Supabase client:', error);
+        }
+
         // Navbar Scroll Effect
         const navbar = document.getElementById('navbar');
         let lastScroll = 0;
@@ -2212,6 +2230,10 @@
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
+            }
+
+            lastScroll = currentScroll;
+        });
             }
 
             lastScroll = currentScroll;
