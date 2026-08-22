@@ -1,0 +1,3563 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Pengajuan Kredensial Online - Dinkes Kutai Kartanegara</title>
+    
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           CSS Variables & Theme
+           ============================================ */
+        :root {
+            /* Colors - Light Mode */
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --primary-hover: #334155;
+            --secondary: #0d9488;
+            --secondary-light: #14b8a6;
+            --secondary-dark: #0f766e;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            
+            /* Background */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-card: #ffffff;
+            
+            /* Text */
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-inverse: #ffffff;
+            
+            /* Border */
+            --border-color: #e2e8f0;
+            --border-focus: #0d9488;
+            
+            /* Status Colors */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            
+            /* Radius */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        [data-theme="dark"] {
+            --primary: #f1f5f9;
+            --primary-light: #e2e8f0;
+            --primary-hover: #cbd5e1;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            padding: 20px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: var(--secondary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .header-title p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* ============================================
+           MAIN CONTAINER
+           ============================================ */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ============================================
+           PROGRESS BAR
+           ============================================ */
+        .progress-container {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-value {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            min-width: 0%;
+        }
+
+        /* ============================================
+           STEPPER
+           ============================================ */
+        .stepper-container {
+            margin-bottom: 32px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            min-width: 600px;
+            gap: 8px;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .step-item:hover {
+            opacity: 0.75;
+        }
+
+        .step-item.active,
+        .step-item.completed {
+            opacity: 1;
+        }
+
+        .step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step-item.active .step-circle {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+        }
+
+        .step-item.completed .step-circle {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .step-item.active .step-label {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        /* ============================================
+           FORM CARD
+           ============================================ */
+        .form-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-header h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ============================================
+           FORM GRID & GROUPS
+           ============================================ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group.half-width {
+            grid-column: span 1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .required {
+            color: var(--error);
+        }
+
+        .hint-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ============================================
+           INPUTS
+           ============================================ */
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        input.error,
+        select.error,
+        textarea.error {
+            border-color: var(--error);
+        }
+
+        input.success,
+        select.success {
+            border-color: var(--success);
+        }
+
+        .form-group.error label {
+            color: var(--error);
+        }
+
+        .error-message {
+            font-size: 0.8rem;
+            color: var(--error);
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ============================================
+           UPLOAD ZONE
+           ============================================ */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-secondary);
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--secondary);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--secondary);
+            background: rgba(13, 148, 136, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-zone.has-file {
+            border-style: solid;
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .upload-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+        }
+
+        .file-name {
+            font-weight: 500;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .file-size {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .remove-file {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--error);
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .remove-file:hover {
+            transform: scale(1.1);
+        }
+
+        /* ============================================
+           DYNAMIC TABLES
+           ============================================ */
+        .dynamic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .dynamic-table th,
+        .dynamic-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dynamic-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .dynamic-table td {
+            vertical-align: middle;
+        }
+
+        .dynamic-table input,
+        .dynamic-table select,
+        .dynamic-table textarea {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+
+        .btn-add-row,
+        .btn-remove-row {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-add-row {
+            background: var(--secondary);
+            color: white;
+            margin-top: 16px;
+        }
+
+        .btn-add-row:hover {
+            background: var(--secondary-dark);
+        }
+
+        .btn-remove-row {
+            background: var(--error);
+            color: white;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .btn-remove-row:hover {
+            background: #dc2626;
+        }
+
+        /* ============================================
+           RADIO & CHECKBOX
+           ============================================ */
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .radio-option,
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .radio-option:hover,
+        .checkbox-option:hover {
+            border-color: var(--secondary);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .radio-option.selected {
+            border-color: var(--secondary);
+            background: rgba(13, 148, 136, 0.1);
+        }
+
+        .radio-dot {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .radio-option.selected .radio-dot {
+            border-color: var(--secondary);
+        }
+
+        .radio-option.selected .radio-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        /* ============================================
+           BUTTONS
+           ============================================ */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--secondary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border-color);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: rgba(13, 148, 136, 0.1);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            padding: 14px 32px;
+            font-size: 1rem;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-draft {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-draft:hover:not(:disabled) {
+            background: #d97706;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-buttons-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ============================================
+           ALERTS
+           ============================================ */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: #065f46;
+        }
+
+        [data-theme="dark"] .alert-success {
+            color: #6ee7b7;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .alert-error {
+            color: #fca5a5;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            color: #fcd34d;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--info);
+            color: #1e40af;
+        }
+
+        [data-theme="dark"] .alert-info {
+            color: #93c5fd;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        /* ============================================
+           STATUS BADGE
+           ============================================ */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-badge.draft {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .status-badge.submitted {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .status-badge.verifying {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        /* ============================================
+           TIMELINE
+           ============================================ */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 28px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -32px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .timeline-item.completed .timeline-marker {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .timeline-item.current .timeline-marker {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+        }
+
+        .timeline-content {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .timeline-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           MODAL
+           ============================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            max-width: 480px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* ============================================
+           LOADING OVERLAY
+           ============================================ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            background: var(--bg-card);
+            padding: 32px 48px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ============================================
+           TRACKING VIEW
+           ============================================ */
+        .tracking-view {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .nomor-pengajuan-display {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .nomor-pengajuan-display .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .nomor-pengajuan-display .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .main-container {
+                padding: 16px;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .stepper {
+                min-width: 500px;
+            }
+
+            .step-circle {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            .step-label {
+                font-size: 0.7rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .nav-buttons-right {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .nav-buttons-right .btn {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stepper {
+                min-width: 400px;
+            }
+
+            .step-label {
+                display: none;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header,
+            .nav-buttons,
+            .stepper-container,
+            .progress-container,
+            .btn {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+
+            .form-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">K</div>
+                <div class="header-title">
+                    <h1>KREDENS - Sistem Kredensial</h1>
+                    <p>Dinas Kesehatan Kabupaten Kutai Kartanegara</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Kelengkapan Formulir</span>
+                <span class="progress-value" id="progressValue">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Stepper -->
+        <div class="stepper-container">
+            <div class="stepper" id="stepper">
+                <!-- Steps will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Form Container -->
+        <div id="formContainer">
+            <!-- Step 1: Identitas Pemohon -->
+            <div class="form-card step-content" data-step="1">
+                <div class="form-header">
+                    <h2><span class="icon">👤</span> Identitas Pemohon</h2>
+                    <p>Lengkapi data diri Anda dengan benar sesuai dokumen resmi</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>NIK (Nomor Induk Kependudukan) <span class="required">*</span></label>
+                        <input type="text" id="nik" name="nik" maxlength="16" placeholder="Masukkan 16 digit NIK" oninput="validateNIK(this)">
+                        <span class="error-message">⚠️ NIK harus terdiri dari 16 digit angka</span>
+                        <span class="hint-text">Pastikan NIK sesuai dengan KTP yang masih berlaku</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Gelar Depan</label>
+                        <input type="text" id="gelarDepan" placeholder="Contoh: dr., drg., dkk.">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Gelar Belakang</label>
+                        <input type="text" id="gelarBelakang" placeholder="Contoh: Sp.PD, M.Kes">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Nama Lengkap <span class="required">*</span></label>
+                        <input type="text" id="namaLengkap" placeholder="Nama lengkap sesuai KTP">
+                        <span class="error-message">⚠️ Nama lengkap wajib diisi</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Tempat Lahir <span class="required">*</span></label>
+                        <input type="text" id="tempatLahir" placeholder="Kota kelahiran">
+                        <span class="error-message">⚠️ Tempat lahir wajib diisi</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Tanggal Lahir <span class="required">*</span></label>
+                        <input type="date" id="tanggalLahir">
+                        <span class="error-message">⚠️ Tanggal lahir wajib diisi</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Jenis Kelamin <span class="required">*</span></label>
+                        <select id="jenisKelamin">
+                            <option value="">-- Pilih Jenis Kelamin --</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                        <span class="error-message">⚠️ Jenis kelamin wajib dipilih</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Nomor WhatsApp <span class="required">*</span></label>
+                        <input type="tel" id="nomorWhatsApp" placeholder="08xxxxxxxxxx" oninput="validateWhatsApp(this)">
+                        <span class="error-message">⚠️ Format nomor WhatsApp tidak valid</span>
+                        <span class="hint-text">Format: 08xx atau +628xx</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="email" placeholder="nama@email.com" oninput="validateEmail(this)">
+                        <span class="error-message">⚠️ Format email tidak valid</span>
+                        <span class="hint-text">Gunakan email aktif untuk notifikasi status pengajuan</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Profil Profesi dan Kepegawaian -->
+            <div class="form-card step-content hidden" data-step="2">
+                <div class="form-header">
+                    <h2><span class="icon">💼</span> Profil Profesi dan Kepegawaian</h2>
+                    <p>Informasi profesi dan status kepegawaian Anda saat ini</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group half-width">
+                        <label>Jenis SDMK <span class="required">*</span></label>
+                        <select id="jenisSdmk" onchange="loadProfesiBySDMK(this.value)">
+                            <option value="">-- Pilih Jenis SDMK --</option>
+                            <option value="sdmk-01">Tenaga Medis</option>
+                            <option value="sdmk-02">Tenaga Keperawatan</option>
+                            <option value="sdmk-03">Tenaga Kefarmasian</option>
+                            <option value="sdmk-04">Tenaga Kesehatan Masyarakat</option>
+                            <option value="sdmk-05">Tenaga Gizi</option>
+                            <option value="sdmk-06">Tenaga Kesehatan Lingkungan</option>
+                            <option value="sdmk-07">Tenaga Teknis Kesehatan Masyarakat</option>
+                        </select>
+                        <span class="error-message">⚠️ Jenis SDMK wajib dipilih</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Jenis Profesi <span class="required">*</span></label>
+                        <select id="jenisProfesi">
+                            <option value="">-- Pilih Profesi --</option>
+                            <!-- Options loaded based on jenisSdmk -->
+                        </select>
+                        <span class="error-message">⚠️ Jenis profesi wajib dipilih</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Jabatan Fungsional</label>
+                        <input type="text" id="jabatanFungsional" placeholder="Contoh: Perawat Pelaksana, Dokter Puskesmas">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Status Kepegawaian <span class="required">*</span></label>
+                        <select id="statusKepegawaian">
+                            <option value="">-- Pilih Status --</option>
+                            <option value="PNS">PNS</option>
+                            <option value="PPPK">PPPK</option>
+                            <option value="Non-ASN">Non-ASN</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <span class="error-message">⚠️ Status kepegawaian wajib dipilih</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Pangkat/Golongan</label>
+                        <input type="text" id="pangkatGolongan" placeholder="Contoh: III/a, Penata Muda">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Unit Kerja / Puskesmas <span class="required">*</span></label>
+                        <select id="unitKerja">
+                            <option value="">-- Pilih Unit Kerja --</option>
+                            <option value="uk-01">PUSKESMAS TENGGARONG</option>
+                            <option value="uk-02">PUSKESMAS TENGGARONG SEBERANG</option>
+                            <option value="uk-03">PUSKESMAS LOA KULU</option>
+                            <option value="uk-04">PUSKESMAS SAMBOJA</option>
+                            <option value="uk-05">PUSKESMAS MUARA JAWA</option>
+                            <option value="uk-06">PUSKESMAS ANG GANA</option>
+                            <option value="uk-07">PUSKESMAS MARANG KUYAN</option>
+                            <option value="uk-08">PUSKESMAS KOTA BANGUN</option>
+                            <option value="uk-09">PUSKESMAS KENOH</option>
+                            <option value="uk-10">PUSKESMAS MUARA MUNTAI</option>
+                            <option value="uk-11">PUSKESMAS MUARA BADAK</option>
+                            <option value="uk-12">RSUD AJI PARASYRA</option>
+                        </select>
+                        <span class="error-message">⚠️ Unit kerja wajib dipilih</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Pendidikan dan Kompetensi -->
+            <div class="form-card step-content hidden" data-step="3">
+                <div class="form-header">
+                    <h2><span class="icon">🎓</span> Pendidikan dan Kompetensi</h2>
+                    <p>Riwayat pendidikan formal dan kompetensi utama</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group half-width">
+                        <label>Jenjang Pendidikan <span class="required">*</span></label>
+                        <select id="jenjang">
+                            <option value="">-- Pilih Jenjang --</option>
+                            <option value="D3">Diploma III (D3)</option>
+                            <option value="D4">Diploma IV (D4)</option>
+                            <option value="S1">Sarjana (S1)</option>
+                            <option value="S2">Magister (S2)</option>
+                            <option value="S3">Doktor (S3)</option>
+                            <option value="Sp1">Spesialis I (Sp1)</option>
+                            <option value="Sp2">Spesialis II (Sp2)</option>
+                            <option value="Profesi">Profesi</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                        <span class="error-message">⚠️ Jenjang pendidikan wajib dipilih</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Tahun Lulus <span class="required">*</span></label>
+                        <input type="text" id="tahunLulus" maxlength="4" placeholder="Contoh: 2020">
+                        <span class="error-message">⚠️ Tahun lulus wajib diisi</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Program Studi <span class="required">*</span></label>
+                        <input type="text" id="programStudi" placeholder="Contoh: Ilmu Keperawatan, Kedokteran Umum">
+                        <span class="error-message">⚠️ Program studi wajib diisi</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Institusi Pendidikan <span class="required">*</span></label>
+                        <input type="text" id="institusi" placeholder="Nama universitas/politeknik/sekolah tinggi">
+                        <span class="error-message">⚠️ Institusi pendidikan wajib diisi</span>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Kompetensi Utama</label>
+                        <input type="text" id="kompetensiUtama" placeholder="Kompetensi utama yang dimiliki">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Kompetensi Khusus</label>
+                        <input type="text" id="kompetensiKhusus" placeholder="Keahlian khusus/spesialisasi">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Keahlian Klinis</label>
+                        <textarea id="keahlianKlinis" rows="3" placeholder="Jelaskan keahlian klinis yang Anda miliki..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Registrasi Perizinan (STR/SIP) -->
+            <div class="form-card step-content hidden" data-step="4">
+                <div class="form-header">
+                    <h2><span class="icon">📋</span> Registrasi dan Perizinan (STR/SIP)</h2>
+                    <p>Data Surat Tanda Registrasi (STR) dan Surat Izin Praktik (SIP)</p>
+                </div>
+
+                <!-- STR Section -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">📄 Surat Tanda Registrasi (STR)</h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group half-width">
+                            <label>Nomor STR <span class="required">*</span></label>
+                            <input type="text" id="strNomor" placeholder="Nomor STR Anda">
+                            <span class="error-message">⚠️ Nomor STR wajib diisi</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>Tanggal Terbit STR <span class="required">*</span></label>
+                            <input type="date" id="strTanggalTerbit">
+                            <span class="error-message">⚠️ Tanggal terbit wajib diisi</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>Tanggal Berakhir STR <span class="required">*</span></label>
+                            <input type="date" id="strTanggalBerakhir" onchange="checkExpiryDate(this, 'strExpiryWarning')">
+                            <span class="error-message">⚠️ Tanggal berakhir wajib diisi</span>
+                            <span class="hint-text" id="strExpiryWarning" style="color: var(--warning); display: none;">⚠️ STR akan segera habis masa berlakunya!</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>File STR (PDF/JPG/PNG, maks 5MB) <span class="required">*</span></label>
+                            <div class="upload-zone" id="strUploadZone">
+                                <input type="file" class="upload-input" id="strFile" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this, 'strUploadZone')">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-text">Klik atau drag file ke sini</div>
+                                <div class="upload-hint">PDF, JPG, PNG • Maks 5MB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIP Section -->
+                <div>
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">📃 Surat Izin Praktik (SIP)</h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group half-width">
+                            <label>Nomor SIP <span class="required">*</span></label>
+                            <input type="text" id="sipNomor" placeholder="Nomor SIP Anda">
+                            <span class="error-message">⚠️ Nomor SIP wajib diisi</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>Tanggal Terbit SIP <span class="required">*</span></label>
+                            <input type="date" id="sipTanggalTerbit">
+                            <span class="error-message">⚠️ Tanggal terbit wajib diisi</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>Tanggal Berakhir SIP <span class="required">*</span></label>
+                            <input type="date" id="sipTanggalBerakhir" onchange="checkExpiryDate(this, 'sipExpiryWarning')">
+                            <span class="error-message">⚠️ Tanggal berakhir wajib diisi</span>
+                            <span class="hint-text" id="sipExpiryWarning" style="color: var(--warning); display: none;">⚠️ SIP akan segera habis masa berlakunya!</span>
+                        </div>
+
+                        <div class="form-group half-width">
+                            <label>File SIP (PDF/JPG/PNG, maks 5MB) <span class="required">*</span></label>
+                            <div class="upload-zone" id="sipUploadZone">
+                                <input type="file" class="upload-input" id="sipFile" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this, 'sipUploadZone')">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-text">Klik atau drag file ke sini</div>
+                                <div class="upload-hint">PDF, JPG, PNG • Maks 5MB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Pengalaman Kerja dan Pelatihan -->
+            <div class="form-card step-content hidden" data-step="5">
+                <div class="form-header">
+                    <h2><span class="icon">📝</span> Pengalaman Kerja dan Pelatihan</h2>
+                    <p>Riwayat pekerjaan dan pelatihan yang telah Anda ikuti</p>
+                </div>
+
+                <!-- Riwayat Pekerjaan -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">🏥 Riwayat Pekerjaan</h3>
+                    
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">No</th>
+                                <th>Nama Fasilitas Kesehatan</th>
+                                <th>Jabatan</th>
+                                <th>Mulai</th>
+                                <th>Selesai</th>
+                                <th>Keterangan</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyRiwayatPekerjaan">
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-add-row" onclick="addRow('riwayatPekerjaan')">+ Tambah Riwayat Pekerjaan</button>
+                </div>
+
+                <!-- Pelatihan -->
+                <div>
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">🎯 Riwayat Pelatihan</h3>
+                    
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Pelatihan</th>
+                                <th>Penyelenggara</th>
+                                <th>Tanggal</th>
+                                <th>JP/SKP</th>
+                                <th>No. Sertifikat</th>
+                                <th>Sertifikat</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPelatihan">
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-add-row" onclick="addRow('pelatihan')">+ Tambah Pelatihan</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Kompetensi dan Portofolio -->
+            <div class="form-card step-content hidden" data-step="6">
+                <div class="form-header">
+                    <h2><span class="icon">🏆</span> Kompetensi dan Portofolio</h2>
+                    <p>Self-assessment kompetensi dan portofolio profesional</p>
+                </div>
+
+                <!-- Self Assessment -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">📊 Self Assessment Kompetensi</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">Pilih profesi terlebih dahulu pada Langkah 2 untuk melihat daftar kompetensi yang relevan.</p>
+                    <div id="selfAssessmentContainer">
+                        <p style="color: var(--text-muted); text-align: center; padding: 24px;">Silakan pilih jenis profesi terlebih dahulu</p>
+                    </div>
+                </div>
+
+                <!-- Portofolio -->
+                <div>
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">💼 Portofolio Profesional</h3>
+                    
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>
+                                <th>Judul Portofolio</th>
+                                <th>Kategori</th>
+                                <th>Tahun</th>
+                                <th>Deskripsi</th>
+                                <th>Dokumen</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPortofolio">
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-add-row" onclick="addRow('portofolio')">+ Tambah Portofolio</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Usulan Kewenangan Klinis -->
+            <div class="form-card step-content hidden" data-step="7">
+                <div class="form-header">
+                    <h2><span class="icon">⚕️</span> Usulan Kewenangan Klinis</h2>
+                    <p>Pilih kewenangan klinis yang ingin diajukan beserta tingkat kemampuan</p>
+                </div>
+
+                <div id="kewenanganContainer">
+                    <p style="color: var(--text-muted); text-align: center; padding: 24px;">Silakan pilih jenis profesi terlebih dahulu</p>
+                </div>
+            </div>
+
+            <!-- Step 8: Dokumen dan Pengajuan -->
+            <div class="form-card step-content hidden" data-step="8">
+                <div class="form-header">
+                    <h2><span class="icon">📎</span> Dokumen Pendukung dan Pengajuan</h2>
+                    <p>Upload dokumen pendukung dan ajukan formulir kredensial Anda</p>
+                </div>
+
+                <!-- Dokumen Checklist -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">📁 Checklist Dokumen</h3>
+                    <div id="dokumenChecklist">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Review Summary -->
+                <div style="margin-bottom: 32px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">📋 Ringkasan Pengajuan</h3>
+                    <div id="summaryContent" style="background: var(--bg-secondary); padding: 20px; border-radius: var(--radius-md);">
+                        <p style="color: var(--text-muted); text-align: center;">Ringkasan akan ditampilkan setelah semua langkah dilengkapi</p>
+                    </div>
+                </div>
+
+                <!-- Pernyataan -->
+                <div style="background: var(--bg-secondary); padding: 24px; border-radius: var(--radius-md);">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); font-size: 1.1rem;">✍️ Pernyataan</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                        Dengan mengajukan formulir ini, saya menyatakan bahwa:
+                    </p>
+                    
+                    <div class="checkbox-group" style="flex-direction: column; gap: 12px;">
+                        <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                            <input type="checkbox" name="pernyataan" value="dataBenar">
+                            <span>✓</span>
+                            <span>Data yang saya isikan adalah benar dan dapat dibuktikan kebenarannya</span>
+                        </label>
+                        
+                        <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                            <input type="checkbox" name="pernyataan" value="bersediaVerifikasi">
+                            <span>✓</span>
+                            <span>Bersedia diverifikasi oleh Tim Ad Hoc Kredensial</span>
+                        </label>
+                        
+                        <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                            <input type="checkbox" name="pernyataan" value="bersediaSesuaiKewenangan">
+                            <span>✓</span>
+                            <span>Bersedia melaksanakan tugas sesuai kewenangan klinis yang ditetapkan</span>
+                        </label>
+                        
+                        <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                            <input type="checkbox" name="pernyataan" value="bersediaTerimaHasil">
+                            <span>✓</span>
+                            <span>Bersedia menerima hasil penetapan kewenangan klinis</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()">← Sebelumnya</button>
+                    <div class="nav-buttons-right">
+                        <button class="btn btn-draft" onclick="saveDraft()">💾 Simpan Draft</button>
+                        <button class="btn btn-primary hidden" id="btnNext" onclick="nextStep()">Selanjutnya →</button>
+                        <button class="btn btn-submit" id="btnSubmit" onclick="submitForm()">📤 Ajukan Sekarang</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation for Steps 1-7 -->
+            <div class="nav-buttons" id="navButtonsMain" style="display: block;">
+                <button class="btn btn-secondary" id="btnPrevMain" onclick="prevStep()" style="visibility: hidden;">← Sebelumnya</button>
+                <div class="nav-buttons-right">
+                    <button class="btn btn-draft" onclick="saveDraft()">💾 Simpan Draft</button>
+                    <button class="btn btn-primary" id="btnNextMain" onclick="nextStep()">Selanjutnya →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking View (Hidden by default) -->
+        <div class="tracking-view hidden" id="trackingView">
+            <div class="nomor-pengajuan-display hidden" id="nomorPengajuanDisplay">
+                <div class="label">Nomor Pengajuan</div>
+                <div class="value" id="nomorPengajuanValue">-</div>
+            </div>
+            <div id="trackingContent">
+                <!-- Populated after submission -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay hidden" id="confirmModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Konfirmasi Pengajuan</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin mengajukan formulir kredensial ini?</p>
+                <p style="color: var(--text-secondary); margin-top: 12px; font-size: 0.9rem;">
+                    Pastikan semua data sudah benar dan lengkap. Setelah diajukan, 
+                    formulir tidak dapat diedit kecuali ada permintaan perbaikan.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button class="btn btn-submit" onclick="confirmSubmit()">Ya, Ajukan Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">Memproses...</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION & CONSTANTS
+        // ============================================
+        
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Replace with your Supabase anon key
+        
+        // Initialize Supabase client (gunakan nama variabel berbeda untuk menghindari konflik)
+        let _supabaseClient = null;
+        
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                _supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.warn('Supabase client initialization failed. Using demo mode.', e);
+        }
+
+        // Form Steps Configuration
+        const FORM_STEPS = [
+            { id: 1, title: 'Identitas Pemohon', shortLabel: 'Identitas', icon: '👤' },
+            { id: 2, title: 'Profil Profesi', shortLabel: 'Profesi', icon: '💼' },
+            { id: 3, title: 'Pendidikan', shortLabel: 'Pendidikan', icon: '🎓' },
+            { id: 4, title: 'STR/SIP', shortLabel: 'STR/SIP', icon: '📋' },
+            { id: 5, title: 'Pengalaman', shortLabel: 'Pengalaman', icon: '📝' },
+            { id: 6, title: 'Kompetensi', shortLabel: 'Kompetensi', icon: '🏆' },
+            { id: 7, title: 'Kewenangan', shortLabel: 'Kewenangan', icon: '⚕️' },
+            { id: 8, title: 'Pengajuan', shortLabel: 'Pengajuan', icon: '📎' }
+        ];
+
+        // Document Types for Upload
+        const JENIS_DOKUMEN = [
+            { kode: 'KTP', nama: 'KTP (Kartu Tanda Penduduk)', wajib: true },
+            { kode: 'IJAZAH', nama: 'Ijazah Pendidikan Terakhir', wajib: true },
+            { kode: 'STR', nama: 'Surat Tanda Registrasi (STR)', wajib: true },
+            { kode: 'SIP', nama: 'Surat Izin Praktik (SIP)', wajib: true },
+            { kode: 'SERTIFIKAT_KOMPETENSI', nama: 'Sertifikat Kompetensi', wajib: false },
+            { kode: 'SERTIFIKAT_PELATIHAN', nama: 'Sertifikat Pelatihan', wajib: false },
+            { kode: 'SURAT_SEHAT', nama: 'Surat Keterangan Sehat', wajib: false },
+            { kode: 'CV', nama: 'Curriculum Vitae (CV)', wajib: true },
+            { kode: 'SK_PNS', nama: 'Surat Keputusan (SK) PNS/PPPK', wajib: false },
+            { kode: 'FOTO', nama: 'Pas Foto Terbaru (3x4)', wajib: true }
+        ];
+
+        // Current State
+        let currentStep = 1;
+
+        // Form Data Structure
+        let formData = {
+            id: null,
+            nomorPengajuan: null,
+            jenisPengajuan: 'AWAL',
+            status: 'DRAFT',
+            // Step 1
+            identitas: {
+                nik: '',
+                gelarDepan: '',
+                gelarBelakang: '',
+                namaLengkap: '',
+                tempatLahir: '',
+                tanggalLahir: '',
+                jenisKelamin: '',
+                nomorWhatsApp: '',
+                email: ''
+            },
+            // Step 2
+            profesi: {
+                jenisSdmk: '',
+                jenisProfesi: '',
+                jabatanFungsional: '',
+                statusKepegawaian: '',
+                pangkatGolongan: '',
+                unitKerja: ''
+            },
+            // Step 3
+            pendidikan: {
+                jenjang: '',
+                programStudi: '',
+                institusi: '',
+                tahunLulus: '',
+                kompetensiUtama: '',
+                kompetensiKhusus: '',
+                keahlianKlinis: ''
+            },
+            // Step 4
+            strSip: {
+                str: {
+                    nomor: '',
+                    tanggalTerbit: '',
+                    tanggalBerakhir: '',
+                    file: null,
+                    fileName: ''
+                },
+                sip: {
+                    nomor: '',
+                    tanggalTerbit: '',
+                    tanggalBerakhir: '',
+                    file: null,
+                    fileName: ''
+                }
+            },
+            // Step 5
+            riwayatPekerjaan: [],
+            pelatihan: [],
+            // Step 6
+            portofolio: [],
+            selfAssessment: [],
+            // Step 7
+            usulanKewenangan: [],
+            // Step 8
+            dokumen: {},
+            pernyataan: {
+                dataBenar: false,
+                bersediaVerifikasi: false,
+                bersediaSesuaiKewenangan: false,
+                bersediaTerimaHasil: false
+            }
+        };
+
+        // Master Data Cache (Static Data as fallback)
+        let masterData = {
+            unitKerja: [
+                { id: 'uk-01', nama: 'PUSKESMAS TENGGARONG', tipe: 'PUSKEMAS' },
+                { id: 'uk-02', nama: 'PUSKESMAS TENGGARONG SEBERANG', tipe: 'PUSKEMAS' },
+                { id: 'uk-03', nama: 'PUSKEMAS LOA KULU', tipe: 'PUSKEMAS' },
+                { id: 'uk-04', nama: 'PUSKESMAS SAMBOJA', tipe: 'PUSKEMAS' },
+                { id: 'uk-05', nama: 'PUSKESMAS MUARA JAWA', tipe: 'PUSKEMAS' },
+                { id: 'uk-06', nama: 'PUSKESMAS ANG GANA', tipe: 'PUSKEMAS' },
+                { id: 'uk-07', nama: 'PUSKESMAS MARANG KUYAN', tipe: 'PUSKEMAS' },
+                { id: 'uk-08', nama: 'PUSKESMAS KOTA BANGUN', tipe: 'PUSKEMAS' },
+                { id: 'uk-09', nama: 'PUSKESMAS KENOH', tipe: 'PUSKEMAS' },
+                { id: 'uk-10', nama: 'PUSKESMAS MUARA MUNTAI', tipe: 'PUSKEMAS' },
+                { id: 'uk-11', nama: 'PUSKESMAS MUARA BADAK', tipe: 'PUSKEMAS' },
+                { id: 'uk-12', nama: 'RSUD AJI PARASYRA', tipe: 'RUMAH SAKIT' }
+            ],
+            jenisSdmk: [
+                { id: 'sdmk-01', kode: 'SDMK-01', nama: 'Tenaga Medis' },
+                { id: 'sdmk-02', kode: 'SDMK-02', nama: 'Tenaga Keperawatan' },
+                { id: 'sdmk-03', kode: 'SDMK-03', nama: 'Tenaga Kefarmasian' },
+                { id: 'sdmk-04', kode: 'SDMK-04', nama: 'Tenaga Kesehatan Masyarakat' },
+                { id: 'sdmk-05', kode: 'SDMK-05', nama: 'Tenaga Gizi' },
+                { id: 'sdmk-06', kode: 'SDMK-06', nama: 'Tenaga Kesehatan Lingkungan' },
+                { id: 'sdmk-07', kode: 'SDMK-07', nama: 'Tenaga Teknis Kesehatan Masyarakat' }
+            ],
+            jenisProfesi: [
+                // Tenaga Medis
+                { id: 'prof-01', kode: 'PROF-01', nama: 'Dokter Umum', jenis_sdmk_id: 'sdmk-01' },
+                { id: 'prof-02', kode: 'PROF-02', nama: 'Dokter Spesialis', jenis_sdmk_id: 'sdmk-01' },
+                { id: 'prof-03', kode: 'PROF-03', nama: 'Dokter Spesialis II', jenis_sdmk_id: 'sdmk-01' },
+                { id: 'prof-04', kode: 'PROF-04', nama: 'Dokter Gigi', jenis_sdmk_id: 'sdmk-01' },
+                // Tenaga Keperawatan
+                { id: 'prof-05', kode: 'PROF-05', nama: 'Perawat', jenis_sdmk_id: 'sdmk-02' },
+                { id: 'prof-06', kode: 'PROF-06', nama: 'Bidan', jenis_sdmk_id: 'sdmk-02' },
+                // Tenaga Kefarmasian
+                { id: 'prof-07', kode: 'PROF-07', nama: 'Apoteker', jenis_sdmk_id: 'sdmk-03' },
+                { id: 'prof-08', kode: 'PROF-08', nama: 'Asisten Apoteker/Teknisi Farmasi', jenis_sdmk_id: 'sdmk-03' },
+                // Tenaga Kesehatan Masyarakat
+                { id: 'prof-09', kode: 'PROF-09', nama: 'Sanitarian/Epidemiolog', jenis_sdmk_id: 'sdmk-04' },
+                { id: 'prof-10', kode: 'PROF-10', nama: 'Promotor Kesehatan', jenis_sdmk_id: 'sdmk-04' },
+                // Tenaga Gizi
+                { id: 'prof-11', kode: 'PROF-11', nama: 'Nutrisionis/Dietisien', jenis_sdmk_id: 'sdmk-05' },
+                // Tenaga Kesehatan Lingkungan
+                { id: 'prof-12', kode: 'PROF-12', nama: 'Sanitarian Lingkungan/Kesling', jenis_sdmk_id: 'sdmk-06' },
+                // Tenaga Teknis Kesmas
+                { id: 'prof-13', kode: 'PROF-13', nama: 'Entomolog', jenis_sdmk_id: 'sdmk-07' },
+                { id: 'prof-14', kode: 'PROF-14', nama: 'Ahli Teknologi Laboratorium Medik', jenis_sdmk_id: 'sdmk-07' }
+            ],
+            kompetensi: [
+                // Dokter Umum
+                { id: 'komp-01', kode: 'KOMP-D01', nama: 'Asuhan Medik Dasar', deskripsi: 'Melakukan pemeriksaan fisik dan penegakan diagnosis penyakit umum', profesi_id: 'prof-01' },
+                { id: 'komp-02', kode: 'KOMP-D02', nama: 'Tindakan Gawat Darurat', deskripsi: 'Penanganan kondisi gawat darurat dan resusitasi', profesi_id: 'prof-01' },
+                { id: 'komp-03', kode: 'KOMP-D03', nama: 'Resep Obat', deskripsi: 'Memberikan resep obat sesuai standar', profesi_id: 'prof-01' },
+                // Perawat
+                { id: 'komp-04', kode: 'KOMP-P01', nama: 'Asuhan Keperawatan Dasar', deskripsi: 'Melakukan asuhan keperawatan dasar', profesi_id: 'prof-05' },
+                { id: 'komp-05', kode: 'KOMP-P02', nama: 'Tindakan Keperawatan', deskripsi: 'Melakukan tindakan keperawatan sesuai kompetensi', profesi_id: 'prof-05' },
+                { id: 'komp-06', kode: 'KOMP-P03', nama: 'Komunikasi Terapeutik', deskripsi: 'Komunikasi efektif dengan pasien dan keluarga', profesi_id: 'prof-05' },
+                // Bidan
+                { id: 'komp-07', kode: 'KOMP-B01', nama: 'Asuhan Kehamilan', deskripsi: 'Antenatal care dan pemantauan kehamilan', profesi_id: 'prof-06' },
+                { id: 'komp-08', kode: 'KOMP-B02', nama: 'Persalinan Normal', deskripsi: 'Menolong persalinan normal', profesi_id: 'prof-06' },
+                { id: 'komp-09', kode: 'KOMP-B03', nama: 'Asuhan Nifas dan Menyusui', deskripsi: 'Perawatan nifas dan dukungan menyusui', profesi_id: 'prof-06' },
+                // Apoteker
+                { id: 'komp-10', kode: 'KOMP-A01', nama: 'Pelayanan Kefarmasian', deskripsi: 'Pelayanan resep dan konseling obat', profesi_id: 'prof-07' },
+                { id: 'komp-11', kode: 'KOMP-A02', nama: 'Manajemen Obat', deskripsi: 'Pengelolaan persediaan dan distribusi obat', profesi_id: 'prof-07' }
+            ],
+            kewenangan: [
+                // Dokter Umum
+                { id: 'kw-01', kode: 'KW-D01', nama: 'Diagnosis dan Terapi Penyakit Umum', deskripsi: 'Mendiagnosis dan memberikan terapi penyakit umum', profesi_id: 'prof-01' },
+                { id: 'kw-02', kode: 'KW-D02', nama: 'Resep Obat', deskripsi: 'Memberikan resep obat oral, injeksi, dan lainnya', profesi_id: 'prof-01' },
+                { id: 'kw-03', kode: 'KW-D03', nama: 'Resusitasi Jantung Paru', deskripsi: 'Melakukan RJP pada kondisi gawat jantung', profesi_id: 'prof-01' },
+                { id: 'kw-04', kode: 'KW-D04', nama: 'Tindakan Bedah Minor', deskripsi: 'Melakukan tindakan bedah minor seperti jahitan luka', profesi_id: 'prof-01' },
+                { id: 'kw-05', kode: 'KW-D05', nama: 'Pemeriksaan Lab dan Radiologi', deskripsi: 'Meminta dan menafsirkan hasil pemeriksaan penunjang', profesi_id: 'prof-01' },
+                // Perawat
+                { id: 'kw-06', kode: 'KW-P01', nama: 'Kompres dan Balut Luka', deskripsi: 'Melakukan perawatan luka dan balutan', profesi_id: 'prof-05' },
+                { id: 'kw-07', kode: 'KW-P02', nama: 'Pemasangan Infus', deskripsi: 'Memasangan dan merawat infus', profesi_id: 'prof-05' },
+                { id: 'kw-08', kode: 'KW-P03', nama: 'Pemberian Obat Oral/Injeksi', deskripsi: 'Memberikan obat sesuai resep dokter', profesi_id: 'prof-05' },
+                { id: 'kw-09', kode: 'KW-P04', nama: 'Kateterisasi', deskripsi: 'Memasang kateter urine', profesi_id: 'prof-05' },
+                // Bidan
+                { id: 'kw-10', kode: 'KW-B01', nama: 'Persalinan Normal', deskripsi: 'Menolong persalinan normal tanpa komplikasi', profesi_id: 'prof-06' },
+                { id: 'kw-11', kode: 'KW-B02', nama: 'Pemeriksaan Kehamilan', deskripsi: 'Melakukan ANC dan pemeriksaan kehamilan rutin', profesi_id: 'prof-06' },
+                { id: 'kw-12', kode: 'KW-B03', nama: 'Implan dan Suntik KB', deskripsi: 'Pelayanan KB implan dan suntik', profesi_id: 'prof-06' },
+                // Apoteker
+                { id: 'kw-13', kode: 'KW-A01', nama: 'Dispensing Resep', deskripsi: 'Meracik dan menyerahkan obat sesuai resep', profesi_id: 'prof-07' },
+                { id: 'kw-14', kode: 'KW-A02', nama: 'Konseling Obat', deskripsi: 'Memberikan informasi penggunaan obat kepada pasien', profesi_id: 'prof-07' }
+            ]
+        };
+
+        // File storage
+        let uploadedFiles = {};
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            renderStepper();
+            loadMasterData();
+            generateDokumenChecklist();
+            setupDragAndDrop();
+            loadFromLocalStorage();
+            updateProgress();
+        });
+
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('kredens_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggle(savedTheme);
+        }
+
+        function updateThemeToggle(theme) {
+            const toggleBtn = document.querySelector('.theme-toggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('kredens_theme', newTheme);
+            updateThemeToggle(newTheme);
+        }
+
+        // Stepper Rendering
+        function renderStepper() {
+            const stepper = document.getElementById('stepper');
+            if (!stepper) return;
+            
+            stepper.innerHTML = FORM_STEPS.map((step, index) => `
+                <div class="step-item ${index + 1 === currentStep ? 'active' : index + 1 < currentStep ? 'completed' : ''}" 
+                     onclick="goToStep(${step.id})" data-step="${step.id}">
+                    <div class="step-circle">${index + 1 < currentStep ? '✓' : step.id}</div>
+                    <div class="step-label">${step.shortLabel}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load Master Data from Supabase or use defaults
+        async function loadMasterData() {
+            showLoading(true);
+            
+            try {
+                if (_supabaseClient) {
+                    // Load Unit Kerja
+                    const { data: unitKerjaData } = await _supabaseClient
+                        .from('unit_kerja')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('nama');
+                    
+                    if (unitKerjaData && unitKerjaData.length > 0) masterData.unitKerja = unitKerjaData;
+
+                    // Load Jenis SDMK
+                    const { data: sdmkData } = await _supabaseClient
+                        .from('jenis_sdmk')
+                        .select('*')
+                        .order('kode');
+                    
+                    if (sdmkData && sdmkData.length > 0) masterData.jenisSdmk = sdmkData;
+
+                    // Load Jenis Profesi
+                    const { data: profesiData } = await _supabaseClient
+                        .from('jenis_profesi')
+                        .select('*, jenis_sdmk(*)')
+                        .order('kode');
+                    
+                    if (profesiData && profesiData.length > 0) masterData.jenisProfesi = profesiData;
+
+                    // Load Kompetensi
+                    const { data: kompetensiData } = await _supabaseClient
+                        .from('kompetensi')
+                        .select('*')
+                        .order('kode');
+                    
+                    if (kompetensiData && kompetensiData.length > 0) masterData.kompetensi = kompetensiData;
+
+                    // Load Kewenangan Klinis
+                    const { data: kewenanganData } = await _supabaseClient
+                        .from('kewenangan_klinis_master')
+                        .select('*')
+                        .order('kode');
+                    
+                    if (kewenanganData && kewenanganData.length > 0) masterData.kewenangan = kewenanganData;
+                }
+                
+                populateDropdowns();
+            } catch (error) {
+                console.error('Error loading master data:', error);
+                showAlert('warning', 'Mode Demo', 'Menggunakan data contoh karena tidak dapat terhubung ke database.');
+                populateDropdowns();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Populate Dropdowns
+        function populateDropdowns() {
+            // Unit Kerja - already has static options in HTML, just ensure consistency
+            const unitKerjaSelect = document.getElementById('unitKerja');
+            if (unitKerjaSelect && masterData.unitKerja) {
+                const currentValue = unitKerjaSelect.value;
+                unitKerjaSelect.innerHTML = '<option value="">-- Pilih Unit Kerja --</option>' +
+                    masterData.unitKerja.map(uk => 
+                        `<option value="${uk.id}">${uk.nama}</option>`
+                    ).join('');
+                unitKerjaSelect.value = currentValue;
+            }
+
+            // Jenis SDMK - already has static options in HTML
+            const sdmkSelect = document.getElementById('jenisSdmk');
+            if (sdmkSelect && masterData.jenisSdmk) {
+                const currentValue = sdmkSelect.value;
+                sdmkSelect.innerHTML = '<option value="">-- Pilih Jenis SDMK --</option>' +
+                    masterData.jenisSdmk.map(sdmk => 
+                        `<option value="${sdmk.id || sdmk.kode}">${sdmk.nama}</option>`
+                    ).join('');
+                sdmkSelect.value = currentValue;
+            }
+        }
+
+        // Load Profesi based on SDMK selection
+        function loadProfesiBySDMK(sdmkId) {
+            const profesiSelect = document.getElementById('jenisProfesi');
+            if (!profesiSelect) return;
+            
+            if (!sdmkId) {
+                profesiSelect.innerHTML = '<option value="">-- Pilih Profesi --</option>';
+                return;
+            }
+
+            const filteredProfesi = masterData.jenisProfesi.filter(p => p.jenis_sdmk_id === sdmkId);
+            
+            profesiSelect.innerHTML = '<option value="">-- Pilih Profesi --</option>' +
+                filteredProfesi.map(p => 
+                    `<option value="${p.kode}">${p.nama}</option>`
+                ).join('');
+
+            // Also update self assessment and kewenangan options
+            updateSelfAssessment(filteredProfesi);
+            updateKewenangan(filteredProfesi);
+        }
+
+        // Update Self Assessment based on profession
+        function updateSelfAssessment(profesiList) {
+            const container = document.getElementById('selfAssessmentContainer');
+            if (!container) return;
+            
+            const selectedProfesiId = document.getElementById('jenisProfesi')?.value;
+            const profesi = profesiList.find(p => p.kode === selectedProfesiId);
+
+            if (!profesi) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 24px;">Silakan pilih jenis profesi terlebih dahulu</p>';
+                return;
+            }
+
+            const relevantKompetensi = masterData.kompetensi.filter(k => k.profesi_id === profesi.id);
+
+            container.innerHTML = relevantKompetensi.length > 0 ? `
+                <div class="dynamic-table">
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>
+                                <th>Kompetensi</th>
+                                <th>Tingkat Kemampuan</th>
+                                <th>Bukti Kompetensi</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${relevantKompetensi.map(komp => `
+                                <tr>
+                                    <td><strong>${komp.nama}</strong>${komp.deskripsi ? `<br><small style="color: var(--text-muted)">${komp.deskripsi}</small>` : ''}</td>
+                                    <td>
+                                        <select onchange="updateSelfAssessmentItem('${komp.id}', 'tingkatKemampuan', this.value)" data-komp-id="${komp.id}">
+                                            <option value="">-- Pilih --</option>
+                                            <option value="BELUM_KOMPETEN">Belum Kompeten</option>
+                                            <option value="KOMPETEN_SUPERVISI">Kompeten dengan Supervisi</option>
+                                            <option value="KOMPETEN_MANDIRI">Kompeten Mandiri</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select multiple onchange="updateSelfAssessmentItem('${komp.id}', 'buktiKompetensi', Array.from(this.selectedOptions).map(o => o.value))" data-komp-id="${komp.id}" style="min-height: 80px;">
+                                            <option value="Pendidikan">Pendidikan Formal</option>
+                                            <option value="Pelatihan">Pelatihan</option>
+                                            <option value="Sertifikat">Sertifikat</option>
+                                            <option value="Pengalaman">Pengalaman Kerja</option>
+                                            <option value="Logbook">Logbook</option>
+                                            <option value="Portofolio">Portofolio</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" placeholder="Keterangan tambahan..." onchange="updateSelfAssessmentItem('${komp.id}', 'keterangan', this.value)" data-komp-id="${komp.id}">
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            ` : '<p style="color: var(--text-muted); text-align: center; padding: 24px;">Belum ada kompetensi tersedia untuk profesi ini.</p>';
+        }
+
+        // Update Kewenangan Klinis based on profession
+        function updateKewenangan(profesiList) {
+            const container = document.getElementById('kewenanganContainer');
+            if (!container) return;
+            
+            const selectedProfesiId = document.getElementById('jenisProfesi')?.value;
+            const profesi = profesiList.find(p => p.kode === selectedProfesiId);
+
+            if (!profesi) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 24px;">Silakan pilih jenis profesi terlebih dahulu</p>';
+                return;
+            }
+
+            const relevantKewenangan = masterData.kewenangan.filter(k => k.profesi_id === profesi.id);
+
+            container.innerHTML = relevantKewenangan.length > 0 ? `
+                <div class="dynamic-table">
+                    <table class="dynamic-table">
+                        <thead>
+                            <tr>
+                                <th>Kewenangan Klinis</th>
+                                <th>Deskripsi</th>
+                                <th>Pilihan</th>
+                                <th>Alasan/Bukti</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${relevantKewenangan.map(kw => `
+                                <tr>
+                                    <td><strong>${kw.nama}</strong></td>
+                                    <td>${kw.deskripsi || '-'}</td>
+                                    <td>
+                                        <div class="radio-group" style="flex-direction: column; gap: 8px;">
+                                            <label class="radio-option" onclick="selectRadio(this); updateKewenanganItem('${kw.id}', 'MANDIRI')">
+                                                <input type="radio" name="kw_${kw.id}" value="MANDIRI">
+                                                <span class="radio-dot"></span>
+                                                <span>Mandiri</span>
+                                            </label>
+                                            <label class="radio-option" onclick="selectRadio(this); updateKewenanganItem('${kw.id}', 'DENGAN_SUPERVISI')">
+                                                <input type="radio" name="kw_${kw.id}" value="DENGAN_SUPERVISI">
+                                                <span class="radio-dot"></span>
+                                                <span>Dengan Supervisi</span>
+                                            </label>
+                                            <label class="radio-option" onclick="selectRadio(this); updateKewenanganItem('${kw.id}', 'TIDAK_DIAJUKAN')">
+                                                <input type="radio" name="kw_${kw.id}" value="TIDAK_DIAJUKAN">
+                                                <span class="radio-dot"></span>
+                                                <span>Tidak Diajukan</span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <textarea placeholder="Alasan atau bukti pendukung..." rows="2" onchange="updateKewenanganItem('${kw.id}', null, this.value)"></textarea>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            ` : '<p style="color: var(--text-muted); text-align: center; padding: 24px;">Belum ada kewenangan klinis tersedia untuk profesi ini.</p>';
+        }
+
+        // Generate Document Checklist
+        function generateDokumenChecklist() {
+            const container = document.getElementById('dokumenChecklist');
+            if (!container) return;
+            
+            container.innerHTML = JENIS_DOKUMEN.map(doc => `
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>
+                        ${doc.nama}
+                        ${doc.wajib ? '<span class="required">*</span>' : ''}
+                    </label>
+                    <div class="upload-zone" id="upload_${doc.kode}">
+                        <input type="file" class="upload-input" id="file_${doc.keyCode}" 
+                               accept=".pdf,.jpg,.jpeg,.png" 
+                               onchange="handleDocumentUpload('${doc.kode}', this)">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Klik untuk upload</div>
+                        <div class="upload-hint">PDF, JPG, PNG • Maks 5MB</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+
+        function goToStep(stepNumber) {
+            if (stepNumber < 1 || stepNumber > FORM_STEPS.length) return;
+            if (stepNumber > currentStep && !validateCurrentStep()) return;
+
+            currentStep = stepNumber;
+            updateUI();
+        }
+
+        function nextStep() {
+            if (currentStep >= FORM_STEPS.length) return;
+            if (!validateCurrentStep()) return;
+
+            saveFormData();
+            currentStep++;
+            updateUI();
+        }
+
+        function prevStep() {
+            if (currentStep <= 1) return;
+            saveFormData();
+            currentStep--;
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update steps visibility
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            const activeStepEl = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+            if (activeStepEl) {
+                activeStepEl.classList.remove('hidden');
+            }
+
+            // Update stepper
+            renderStepper();
+
+            // Show/hide navigation buttons
+            const navMain = document.getElementById('navButtonsMain');
+            const navStep8 = document.querySelector('[data-step="8"] .nav-buttons');
+            
+            if (currentStep === 8) {
+                if (navMain) navMain.style.display = 'none';
+                if (navStep8) navStep8.style.display = 'flex';
+            } else {
+                if (navMain) navMain.style.display = 'flex';
+                if (navStep8) navStep8.style.display = 'none';
+                
+                // Update main navigation buttons
+                const btnPrevMain = document.getElementById('btnPrevMain');
+                const btnNextMain = document.getElementById('btnNextMain');
+                
+                if (btnPrevMain) btnPrevMain.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            }
+
+            // Update progress
+            updateProgress();
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================
+        // VALIDATION
+        // ============================================
+
+        function validateNIK(input) {
+            if (!input) return false;
+            const value = input.value.replace(/\D/g, '');
+            input.value = value;
+            
+            const formGroup = input.closest('.form-group');
+            
+            if (value && value.length !== 16) {
+                formGroup.classList.add('error');
+                formGroup.classList.remove('success');
+                return false;
+            } else if (value.length === 16) {
+                formGroup.classList.remove('error');
+                formGroup.classList.add('success');
+                return true;
+            } else {
+                formGroup.classList.remove('error', 'success');
+                return false;
+            }
+        }
+
+        function validateEmail(input) {
+            if (!input) return false;
+            const value = input.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const formGroup = input.closest('.form-group');
+
+            if (value && !emailRegex.test(value)) {
+                formGroup.classList.add('error');
+                formGroup.classList.remove('success');
+                return false;
+            } else if (value && emailRegex.test(value)) {
+                formGroup.classList.remove('error');
+                formGroup.classList.add('success');
+                return true;
+            } else {
+                formGroup.classList.remove('error', 'success');
+                return false;
+            }
+        }
+
+        function validateWhatsApp(input) {
+            if (!input) return false;
+            const value = input.value.replace(/[\s\-\(\)]/g, '');
+            const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
+            const formGroup = input.closest('.form-group');
+
+            if (value && !phoneRegex.test(value)) {
+                formGroup.classList.add('error');
+                formGroup.classList.remove('success');
+                return false;
+            } else if (value && phoneRegex.test(value)) {
+                formGroup.classList.remove('error');
+                formGroup.classList.add('success');
+                return true;
+            } else {
+                formGroup.classList.remove('error', 'success');
+                return false;
+            }
+        }
+
+        function validateRequired(input) {
+            if (!input) return false;
+            const formGroup = input.closest('.form-group');
+            if (!input.value.trim()) {
+                formGroup.classList.add('error');
+                return false;
+            } else {
+                formGroup.classList.remove('error');
+                return true;
+            }
+        }
+
+        function checkExpiryDate(input, warningElementId) {
+            const warningEl = document.getElementById(warningElementId);
+            if (!input.value || !warningEl) return;
+
+            const expiryDate = new Date(input.value);
+            const now = new Date();
+            const threeMonthsFromNow = new Date(now.setMonth(now.getMonth() + 3));
+
+            if (expiryDate <= threeMonthsFromNow) {
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        function validateCurrentStep() {
+            let isValid = true;
+            const stepEl = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+            
+            switch(currentStep) {
+                case 1:
+                    // Validate identitas
+                    isValid &= validateRequired(document.getElementById('nik'));
+                    isValid &= validateRequired(document.getElementById('namaLengkap'));
+                    isValid &= validateRequired(document.getElementById('tempatLahir'));
+                    isValid &= validateRequired(document.getElementById('tanggalLahir'));
+                    isValid &= validateRequired(document.getElementById('jenisKelamin'));
+                    isValid &= validateRequired(document.getElementById('nomorWhatsApp'));
+                    isValid &= validateRequired(document.getElementById('email'));
+                    
+                    // Additional format validations
+                    isValid &= validateNIK(document.getElementById('nik'));
+                    isValid &= validateEmail(document.getElementById('email'));
+                    isValid &= validateWhatsApp(document.getElementById('nomorWhatsApp'));
+                    break;
+
+                case 2:
+                    isValid &= validateRequired(document.getElementById('jenisSdmk'));
+                    isValid &= validateRequired(document.getElementById('jenisProfesi'));
+                    isValid &= validateRequired(document.getElementById('statusKepegawaian'));
+                    isValid &= validateRequired(document.getElementById('unitKerja'));
+                    break;
+
+                case 3:
+                    isValid &= validateRequired(document.getElementById('jenjang'));
+                    isValid &= validateRequired(document.getElementById('programStudi'));
+                    isValid &= validateRequired(document.getElementById('institusi'));
+                    isValid &= validateRequired(document.getElementById('tahunLulus'));
+                    break;
+
+                case 4:
+                    isValid &= validateRequired(document.getElementById('strNomor'));
+                    isValid &= validateRequired(document.getElementById('strTanggalTerbit'));
+                    isValid &= validateRequired(document.getElementById('strTanggalBerakhir'));
+                    isValid &= validateRequired(document.getElementById('sipNomor'));
+                    isValid &= validateRequired(document.getElementById('sipTanggalTerbit'));
+                    isValid &= validateRequired(document.getElementById('sipTanggalBerakhir'));
+                    break;
+
+                case 8:
+                    // Check pernyataan checkboxes
+                    const checkboxes = document.querySelectorAll('input[name="pernyataan"]:checked');
+                    if (checkboxes.length < 4) {
+                        showAlert('error', 'Pernyataan Belum Lengkap', 'Anda harus menyetujui semua pernyataan sebelum mengajukan.');
+                        isValid = false;
+                    }
+                    break;
+            }
+
+            if (!isValid && currentStep !== 8) {
+                showAlert('error', 'Validasi Gagal', 'Mohon lengkapi semua field yang wajib diisi pada halaman ini.');
+            }
+
+            return isValid;
+        }
+
+        // ============================================
+        // FILE HANDLING
+        // ============================================
+
+        function handleFileUpload(input, zoneId) {
+            const zone = document.getElementById(zoneId);
+            const file = input.files[0];
+
+            if (!file) return;
+
+            // Validate file
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!allowedTypes.includes(file.type)) {
+                showAlert('error', 'Format Tidak Didukung', 'Hanya file PDF, JPG, JPEG, dan PNG yang diperbolehkan.');
+                input.value = '';
+                return;
+            }
+
+            if (file.size > maxSize) {
+                showAlert('error', 'Ukuran File Terlalu Besar', 'Ukuran file maksimal adalah 5MB.');
+                input.value = '';
+                return;
+            }
+
+            // Show file info
+            zone.classList.add('has-file');
+            zone.innerHTML = `
+                <div class="file-info">
+                    <span>📄</span>
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${formatFileSize(file.size)}</span>
+                    <button type="button" class="remove-file" onclick="removeFile('${zoneId}', '${input.id}')">×</button>
+                </div>
+            `;
+
+            // Store file reference
+            uploadedFiles[input.id] = file;
+        }
+
+        function handleDocumentUpload(docType, input) {
+            const zone = document.getElementById(`upload_${docType}`);
+            const file = input.files[0];
+
+            if (!file) return;
+
+            // Validate file
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024;
+
+            if (!allowedTypes.includes(file.type)) {
+                showAlert('error', 'Format Tidak Didukung', 'Hanya file PDF, JPG, JPEG, dan PNG yang diperbolehkan.');
+                input.value = '';
+                return;
+            }
+
+            if (file.size > maxSize) {
+                showAlert('error', 'Ukuran File Terlalu Besar', 'Ukuran file maksimal adalah 5MB.');
+                input.value = '';
+                return;
+            }
+
+            // Update zone
+            zone.classList.add('has-file');
+            zone.innerHTML = `
+                <div class="file-info">
+                    <span>📄</span>
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${formatFileSize(file.size)}</span>
+                    <button type="button" class="remove-file" onclick="removeDocumentFile('${docType}', '${zone.id}')">×</button>
+                </div>
+            `;
+
+            // Store in formData
+            formData.dokumen[docType] = {
+                file: file,
+                fileName: file.name,
+                fileSize: file.size,
+                status: 'LENGKAP'
+            };
+        }
+
+        function removeFile(zoneId, inputId) {
+            const zone = document.getElementById(zoneId);
+            const originalInput = document.getElementById(inputId);
+            
+            if (!zone) return;
+            
+            zone.classList.remove('has-file');
+            zone.innerHTML = `
+                <input type="file" class="upload-input" id="${inputId}" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileUpload(this, '${zoneId}')">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Klik atau drag file ke sini</div>
+                <div class="upload-hint">PDF, JPG, PNG • Maks 5MB</div>
+            `;
+            
+            delete uploadedFiles[inputId];
+        }
+
+        function removeDocumentFile(docType, zoneId) {
+            const zone = document.getElementById(zoneId);
+            if (!zone) return;
+            
+            zone.classList.remove('has-file');
+            zone.innerHTML = `
+                <input type="file" class="upload-input" id="file_${docType}" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocumentUpload('${docType}', this)">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Klik untuk upload</div>
+                <div class="upload-hint">PDF, JPG, PNG • Maks 5MB</div>
+            `;
+            
+            delete formData.dokumen[docType];
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Drag and Drop Setup
+        function setupDragAndDrop() {
+            document.querySelectorAll('.upload-zone').forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('dragover');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('dragover');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('dragover');
+                    
+                    const input = zone.querySelector('.upload-input');
+                    if (input && e.dataTransfer.files.length > 0) {
+                        input.files = e.dataTransfer.files;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+        }
+
+        // ============================================
+        // DYNAMIC TABLES
+        // ============================================
+
+        let rowCounter = {
+            riwayatPekerjaan: 0,
+            pelatihan: 0,
+            portofolio: 0
+        };
+
+        function addRow(tableType) {
+            const tbody = document.getElementById(`tbody${tableType.charAt(0).toUpperCase() + tableType.slice(1)}`);
+            if (!tbody) return;
+            
+            rowCounter[tableType]++;
+
+            switch(tableType) {
+                case 'riwayatPekerjaan':
+                    tbody.innerHTML += `
+                        <tr data-row="${rowCounter[tableType]}">
+                            <td>${rowCounter[tableType]}</td>
+                            <td><input type="text" name="fasilitas_${rowCounter[tableType]}" placeholder="Nama fasilitas kesehatan"></td>
+                            <td><input type="text" name="jabatan_${rowCounter[tableType]}" placeholder="Jabatan profesi"></td>
+                            <td><input type="date" name="tglMulai_${rowCounter[tableType]}"></td>
+                            <td><input type="date" name="tglSelesai_${rowCounter[tableType]}"></td>
+                            <td><input type="text" name="keterangan_${rowCounter[tableType]}" placeholder="Keterangan"></td>
+                            <td><button type="button" class="btn-remove-row" onclick="removeRow(this, 'riwayatPekerjaan')">×</button></td>
+                        </tr>
+                    `;
+                    break;
+
+                case 'pelatihan':
+                    tbody.innerHTML += `
+                        <tr data-row="${rowCounter[tableType]}">
+                            <td><input type="text" name="namaPelatihan_${rowCounter[tableType]}" placeholder="Nama pelatihan"></td>
+                            <td><input type="text" name="penyelenggara_${rowCounter[tableType]}" placeholder="Penyelenggara"></td>
+                            <td><input type="date" name="tanggalPelatihan_${rowCounter[tableType]}"></td>
+                            <td><input type="text" name="jpSkp_${rowCounter[tableType]}" placeholder="JP/SKP"></td>
+                            <td><input type="text" name="noSertifikat_${rowCounter[tableType]}" placeholder="No. Sertifikat"></td>
+                            <td>
+                                <input type="file" name="fileSertifikat_${rowCounter[tableType]}" accept=".pdf,.jpg,.jpeg,.png" style="font-size: 0.85rem;">
+                            </td>
+                            <td><button type="button" class="btn-remove-row" onclick="removeRow(this, 'pelatihan')">×</button></td>
+                        </tr>
+                    `;
+                    break;
+
+                case 'portofolio':
+                    tbody.innerHTML += `
+                        <tr data-row="${rowCounter[tableType]}">
+                            <td><input type="text" name="judulPorto_${rowCounter[tableType]}" placeholder="Judul portofolio"></td>
+                            <td>
+                                <select name="kategoriPorto_${rowCounter[tableType]}">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="Penelitian">Penelitian</option>
+                                    <option value="Publikasi">Publikasi Ilmiah</option>
+                                    <option value="Inovasi">Inovasi</option>
+                                    <option value="Pengabdian Masyarakat">Pengabdian Masyarakat</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </td>
+                            <td><input type="date" name="tanggalPorto_${rowCounter[tableType]}"></td>
+                            <td><textarea name="deskripsiPorto_${rowCounter[tableType]}" rows="2" placeholder="Deskripsi singkat"></textarea></td>
+                            <td>
+                                <input type="file" name="filePorto_${rowCounter[tableType]}" accept=".pdf,.jpg,.jpeg,.png" style="font-size: 0.85rem;">
+                            </td>
+                            <td><button type="button" class="btn-remove-row" onclick="removeRow(this, 'portofolio')">×</button></td>
+                        </tr>
+                    `;
+                    break;
+            }
+        }
+
+        function removeRow(button, tableType) {
+            const row = button.closest('tr');
+            if (row) row.remove();
+        }
+
+        // ============================================
+        // SELF ASSESSMENT & KEWENANGAN UPDATES
+        // ============================================
+
+        function updateSelfAssessmentItem(kompId, field, value) {
+            let item = formData.selfAssessment.find(s => s.kompetensiId === kompId);
+            
+            if (!item) {
+                const komp = masterData.kompetensi.find(k => k.id === kompId);
+                item = {
+                    kompetensiId: kompId,
+                    kompetensiNama: komp?.nama || '',
+                    deskripsi: komp?.deskripsi || '',
+                    tingkatKemampuan: '',
+                    buktiKompetensi: [],
+                    keterangan: ''
+                };
+                formData.selfAssessment.push(item);
+            }
+
+            item[field] = value;
+        }
+
+        function updateKewenanganItem(kwId, pilihan, alasan) {
+            let item = formData.usulanKewenangan.find(u => u.kewenanganId === kwId);
+            
+            if (!item) {
+                const kw = masterData.kewenangan.find(k => k.id === kwId);
+                item = {
+                    kewenanganId: kwId,
+                    namaKewenangan: kw?.nama || '',
+                    deskripsi: kw?.deskripsi || '',
+                    pilihan: '',
+                    alasan: '',
+                    buktiPendukung: ''
+                };
+                formData.usulanKewenangan.push(item);
+            }
+
+            if (pilihan) {
+                item.pilihan = pilihan;
+            }
+            if (alasan !== undefined && alasan !== null) {
+                item.alasan = alasan;
+            }
+        }
+
+        // UI Helpers for Radio/Checkbox
+        function selectRadio(labelElement) {
+            const radioGroup = labelElement.parentElement;
+            radioGroup.querySelectorAll('.radio-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            labelElement.classList.add('selected');
+            const radio = labelElement.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        }
+
+        function toggleCheckbox(labelElement) {
+            labelElement.classList.toggle('selected');
+            const checkbox = labelElement.querySelector('input[type="checkbox"]');
+            if (checkbox) checkbox.checked = !checkbox.checked;
+        }
+
+        // ============================================
+        // PROGRESS TRACKING
+        // ============================================
+
+        function updateProgress() {
+            let filledFields = 0;
+            let totalFields = 0;
+
+            // Count fields for each step
+            totalFields++; // nik
+            if (formData.identitas.nik) filledFields++;
+            totalFields++; // namaLengkap
+            if (formData.identitas.namaLengkap) filledFields++;
+            totalFields++; // tempatLahir
+            if (formData.identitas.tempatLahir) filledFields++;
+            totalFields++; // tanggalLahir
+            if (formData.identitas.tanggalLahir) filledFields++;
+            totalFields++; // jenisKelamin
+            if (formData.identitas.jenisKelamin) filledFields++;
+            totalFields++; // nomorWhatsApp
+            if (formData.identitas.nomorWhatsApp) filledFields++;
+            totalFields++; // email
+            if (formData.identitas.email) filledFields++;
+
+            totalFields++; // jenisSdmk
+            if (formData.profesi.jenisSdmk) filledFields++;
+            totalFields++; // jenisProfesi
+            if (formData.profesi.jenisProfesi) filledFields++;
+            totalFields++; // statusKepegawaian
+            if (formData.profesi.statusKepegawaian) filledFields++;
+            totalFields++; // unitKerja
+            if (formData.profesi.unitKerja) filledFields++;
+
+            totalFields++; // jenjang
+            if (formData.pendidikan.jenjang) filledFields++;
+            totalFields++; // programStudi
+            if (formData.pendidikan.programStudi) filledFields++;
+            totalFields++; // institusi
+            if (formData.pendidikan.institusi) filledFields++;
+            totalFields++; // tahunLulus
+            if (formData.pendidikan.tahunLulus) filledFields++;
+
+            totalFields++; // strNomor
+            if (formData.strSip.str.nomor) filledFields++;
+            totalFields++; // sipNomor
+            if (formData.strSip.sip.nomor) filledFields++;
+
+            const percentage = Math.round((filledFields / totalFields) * 100);
+            
+            const progressFill = document.getElementById('progressFill');
+            const progressValue = document.getElementById('progressValue');
+            
+            if (progressFill) progressFill.style.width = percentage + '%';
+            if (progressValue) progressValue.textContent = percentage + '%';
+        }
+
+        // ============================================
+        // DATA MANAGEMENT
+        // ============================================
+
+        function saveFormData() {
+            // Collect data from form fields
+            formData.identitas.nik = document.getElementById('nik')?.value || '';
+            formData.identitas.gelarDepan = document.getElementById('gelarDepan')?.value || '';
+            formData.identitas.gelarBelakang = document.getElementById('gelarBelakang')?.value || '';
+            formData.identitas.namaLengkap = document.getElementById('namaLengkap')?.value || '';
+            formData.identitas.tempatLahir = document.getElementById('tempatLahir')?.value || '';
+            formData.identitas.tanggalLahir = document.getElementById('tanggalLahir')?.value || '';
+            formData.identitas.jenisKelamin = document.getElementById('jenisKelamin')?.value || '';
+            formData.identitas.nomorWhatsApp = document.getElementById('nomorWhatsApp')?.value || '';
+            formData.identitas.email = document.getElementById('email')?.value || '';
+
+            formData.profesi.jenisSdmk = document.getElementById('jenisSdmk')?.value || '';
+            formData.profesi.jenisProfesi = document.getElementById('jenisProfesi')?.value || '';
+            formData.profesi.jabatanFungsional = document.getElementById('jabatanFungsional')?.value || '';
+            formData.profesi.statusKepegawaian = document.getElementById('statusKepegawaian')?.value || '';
+            formData.profesi.pangkatGolongan = document.getElementById('pangkatGolongan')?.value || '';
+            formData.profesi.unitKerja = document.getElementById('unitKerja')?.value || '';
+
+            formData.pendidikan.jenjang = document.getElementById('jenjang')?.value || '';
+            formData.pendidikan.programStudi = document.getElementById('programStudi')?.value || '';
+            formData.pendidikan.institusi = document.getElementById('institusi')?.value || '';
+            formData.pendidikan.tahunLulus = document.getElementById('tahunLulus')?.value || '';
+            formData.pendidikan.kompetensiUtama = document.getElementById('kompetensiUtama')?.value || '';
+            formData.pendidikan.kompetensiKhusus = document.getElementById('kompetensiKhusus')?.value || '';
+            formData.pendidikan.keahlianKlinis = document.getElementById('keahlianKlinis')?.value || '';
+
+            formData.strSip.str.nomor = document.getElementById('strNomor')?.value || '';
+            formData.strSip.str.tanggalTerbit = document.getElementById('strTanggalTerbit')?.value || '';
+            formData.strSip.str.tanggalBerakhir = document.getElementById('strTanggalBerakhir')?.value || '';
+            formData.strSip.sip.nomor = document.getElementById('sipNomor')?.value || '';
+            formData.strSip.sip.tanggalTerbit = document.getElementById('sipTanggalTerbit')?.value || '';
+            formData.strSip.sip.tanggalBerakhir = document.getElementById('sipTanggalBerakhir')?.value || '';
+
+            // Save to localStorage
+            localStorage.setItem('kredens_draft', JSON.stringify(formData));
+            updateProgress();
+        }
+
+        function loadFromLocalStorage() {
+            const savedDraft = localStorage.getItem('kredens_draft');
+            if (savedDraft) {
+                try {
+                    const parsed = JSON.parse(savedDraft);
+                    Object.assign(formData, parsed);
+                    populateFormFields();
+                } catch (e) {
+                    console.warn('Error loading saved draft:', e);
+                }
+            }
+        }
+
+        function populateFormFields() {
+            // Populate Step 1
+            if (document.getElementById('nik')) document.getElementById('nik').value = formData.identitas.nik;
+            if (document.getElementById('gelarDepan')) document.getElementById('gelarDepan').value = formData.identitas.gelarDepan;
+            if (document.getElementById('gelarBelakang')) document.getElementById('gelarBelakang').value = formData.identitas.gelarBelakang;
+            if (document.getElementById('namaLengkap')) document.getElementById('namaLengkap').value = formData.identitas.namaLengkap;
+            if (document.getElementById('tempatLahir')) document.getElementById('tempatLahir').value = formData.identitas.tempatLahir;
+            if (document.getElementById('tanggalLahir')) document.getElementById('tanggalLahir').value = formData.identitas.tanggalLahir;
+            if (document.getElementById('jenisKelamin')) document.getElementById('jenisKelamin').value = formData.identitas.jenisKelamin;
+            if (document.getElementById('nomorWhatsApp')) document.getElementById('nomorWhatsApp').value = formData.identitas.nomorWhatsApp;
+            if (document.getElementById('email')) document.getElementById('email').value = formData.identitas.email;
+
+            // Populate Step 2
+            if (document.getElementById('jenisSdmk')) {
+                document.getElementById('jenisSdmk').value = formData.profesi.jenisSdmk;
+                loadProfesiBySDMK(formData.profesi.jenisSdmk);
+            }
+            if (document.getElementById('jenisProfesi')) document.getElementById('jenisProfesi').value = formData.profesi.jenisProfesi;
+            if (document.getElementById('jabatanFungsional')) document.getElementById('jabatanFungsional').value = formData.profesi.jabatanFungsional;
+            if (document.getElementById('statusKepegawaian')) document.getElementById('statusKepegawaian').value = formData.profesi.statusKepegawaian;
+            if (document.getElementById('pangkatGolongan')) document.getElementById('pangkatGolongan').value = formData.profesi.pangkatGolongan;
+            if (document.getElementById('unitKerja')) document.getElementById('unitKerja').value = formData.profesi.unitKerja;
+
+            // Populate Step 3
+            if (document.getElementById('jenjang')) document.getElementById('jenjang').value = formData.pendidikan.jenjang;
+            if (document.getElementById('programStudi')) document.getElementById('programStudi').value = formData.pendidikan.programStudi;
+            if (document.getElementById('institusi')) document.getElementById('institusi').value = formData.pendidikan.institusi;
+            if (document.getElementById('tahunLulus')) document.getElementById('tahunLulus').value = formData.pendidikan.tahunLulus;
+            if (document.getElementById('kompetensiUtama')) document.getElementById('kompetensiUtama').value = formData.pendidikan.kompetensiUtama;
+            if (document.getElementById('kompetensiKhusus')) document.getElementById('kompetensiKhusus').value = formData.pendidikan.kompetensiKhusus;
+            if (document.getElementById('keahlianKlinis')) document.getElementById('keahlianKlinis').value = formData.pendidikan.keahlianKlinis;
+
+            // Populate Step 4
+            if (document.getElementById('strNomor')) document.getElementById('strNomor').value = formData.strSip.str.nomor;
+            if (document.getElementById('strTanggalTerbit')) document.getElementById('strTanggalTerbit').value = formData.strSip.str.tanggalTerbit;
+            if (document.getElementById('strTanggalBerakhir')) document.getElementById('strTanggalBerakhir').value = formData.strSip.str.tanggalBerakhir;
+            if (document.getElementById('sipNomor')) document.getElementById('sipNomor').value = formData.strSip.sip.nomor;
+            if (document.getElementById('sipTanggalTerbit')) document.getElementById('sipTanggalTerbit').value = formData.strSip.sip.tanggalTerbit;
+            if (document.getElementById('sipTanggalBerakhir')) document.getElementById('sipTanggalBerakhir').value = formData.strSip.sip.tanggalBerakhir;
+        }
+
+        // ============================================
+        // SUBMISSION
+        // ============================================
+
+        async function saveDraft() {
+            saveFormData();
+            showLoading(true);
+
+            try {
+                let supabaseSuccess = false;
+                
+                if (_supabaseClient) {
+                    // Check if record exists
+                    if (formData.id) {
+                        const { error } = await _supabaseClient
+                            .from('pengajuan_kredensial')
+                            .update({
+                                status: 'DRAFT',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', formData.id);
+
+                        if (error) throw error;
+                        supabaseSuccess = true;
+                    } else {
+                        // Get user ID and ensure user exists in users table
+                        let userId = await getCurrentUserId();
+                        
+                        // Ensure user exists before inserting pengajuan
+                        userId = await ensureUserExists(userId);
+                        
+                        console.log('Saving draft with userId:', userId);
+                        
+                        const { data, error } = await _supabaseClient
+                            .from('pengajuan_kredensial')
+                            .insert({
+                                user_id: userId,
+                                jenis_pengajuan: formData.jenisPengajuan,
+                                status: 'DRAFT',
+                                nik: formData.identitas.nik,
+                                nama_lengkap: formData.identitas.namaLengkap,
+                                gelar_depan: formData.identitas.gelarDepan,
+                                gelar_belakang: formData.identitas.gelarBelakang,
+                                tempat_lahir: formData.identitas.tempatLahir,
+                                tanggal_lahir: formData.identitas.tanggalLahir,
+                                jenis_kelamin: formData.identitas.jenisKelamin,
+                                nomor_whatsapp: formData.identitas.nomorWhatsApp,
+                                email: formData.identitas.email,
+                                jenis_sdmk: formData.profesi.jenisSdmk,
+                                jenis_profesi: formData.profesi.jenisProfesi,
+                                jabatan_fungsional: formData.profesi.jabatanFungsional,
+                                status_kepegawaian: formData.profesi.statusKepegawaian,
+                                pangkat_golongan: formData.profesi.pangkatGolongan,
+                                unit_kerja_id: formData.profesi.unitKerja || null
+                            })
+                            .select()
+                            .single();
+
+                        if (error) throw error;
+                        
+                        formData.id = data.id;
+                        formData.nomorPengajuan = data.nomor_pengajuan;
+                        supabaseSuccess = true;
+                    }
+                }
+
+                // Show success message
+                if (supabaseSuccess) {
+                    showAlert('success', 'Draft Tersimpan', 'Formulir berhasil disimpan ke database server.');
+                } else {
+                    showAlert('success', 'Draft Tersimpan (Local)', 'Formulir disimpan di browser Anda. Data akan tersinkronisasi saat koneksi tersedia.');
+                }
+                
+                if (formData.nomorPengajuan) {
+                    const nomorDisplay = document.getElementById('nomorPengajuanDisplay');
+                    const nomorValue = document.getElementById('nomorPengajuanValue');
+                    if (nomorDisplay) nomorDisplay.classList.remove('hidden');
+                    if (nomorValue) nomorValue.textContent = formData.nomorPengajuan;
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                // Data already saved to localStorage via saveFormData(), so just inform user
+                const errorMsg = getSupabaseErrorMessage(error);
+                showAlert('warning', 'Tersimpan Secara Local', 
+                    'Data tersimpan di browser.\n\nError server: ' + errorMsg);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function submitForm() {
+            openModal();
+        }
+
+        async function confirmSubmit() {
+            closeModal();
+            saveFormData();
+            showLoading(true);
+
+            try {
+                let supabaseSuccess = false;
+                
+                // Generate submission number if needed
+                if (!formData.nomorPengajuan) {
+                    const year = new Date().getFullYear();
+                    formData.nomorPengajuan = `KRD-${year}-${String(Math.floor(Math.random() * 900000) + 100000).padStart(6, '0')}`;
+                }
+
+                if (_supabaseClient) {
+                    try {
+                        // Insert or update main record
+                        let pengajuanData;
+                        
+                        // Get user ID and ensure user exists in users table
+                        let userId = await getCurrentUserId();
+                        
+                        // Ensure user exists before inserting pengajuan
+                        userId = await ensureUserExists(userId);
+                        
+                        console.log('Submitting with userId:', userId);
+                        
+                        if (formData.id) {
+                            const { data, error } = await _supabaseClient
+                                .from('pengajuan_kredensial')
+                                .update({
+                                    status: 'DIAJUKAN',
+                                    tanggal_pengajuan: new Date().toISOString(),
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('id', formData.id)
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            pengajuanData = data;
+                        } else {
+                            const { data, error } = await _supabaseClient
+                                .from('pengajuan_kredensial')
+                                .insert({
+                                    user_id: userId,
+                                    jenis_pengajuan: formData.jenisPengajuan,
+                                    status: 'DIAJUKAN',
+                                    nik: formData.identitas.nik,
+                                    nama_lengkap: formData.identitas.namaLengkap,
+                                    gelar_depan: formData.identitas.gelarDepan,
+                                    gelar_belakang: formData.identitas.gelarBelakang,
+                                    tempat_lahir: formData.identitas.tempatLahir,
+                                    tanggal_lahir: formData.identitas.tanggalLahir,
+                                    jenis_kelamin: formData.identitas.jenisKelamin,
+                                    nomor_whatsapp: formData.identitas.nomorWhatsApp,
+                                    email: formData.identitas.email,
+                                    jenis_sdmk: formData.profesi.jenisSdmk,
+                                    jenis_profesi: formData.profesi.jenisProfesi,
+                                    jabatan_fungsional: formData.profesi.jabatanFungsional,
+                                    status_kepegawaian: formData.profesi.statusKepegawaian,
+                                    pangkat_golongan: formData.profesi.pangkatGolongan,
+                                    unit_kerja_id: formData.profesi.unitKerja || null,
+                                    tanggal_pengajuan: new Date().toISOString()
+                                })
+                                .select()
+                                .single();
+
+                            if (error) throw error;
+                            pengajuanData = data;
+                            formData.id = pengajuanData.id;
+                            formData.nomorPengajuan = pengajuanData.nomor_pengajuan;
+                        }
+                        
+                        supabaseSuccess = true;
+                        
+                        // Clear localStorage draft only if successfully saved to server
+                        localStorage.removeItem('kredens_draft');
+                        
+                        // Show success and tracking
+                        showAlert('success', 'Pengajuan Berhasil!', `Formulir berhasil diajukan dengan nomor: ${formData.nomorPengajuan}`);
+                        showTrackingView();
+                        
+                    } catch (supabaseError) {
+                        console.warn('Supabase submission failed:', supabaseError);
+                        console.error('Full error details:', JSON.stringify(supabaseError, null, 2));
+                        
+                        // Show detailed error to help debugging
+                        const errorMsg = getSupabaseErrorMessage(supabaseError);
+                        showAlert('error', 'Error Server (Detail)', 
+                            'Terjadi kesalahan saat menyimpan ke server:\n\n' + errorMsg +
+                            '\n\nData tetap tersimpan di browser sebagai cadangan.');
+                        
+                        // Fall through to local mode
+                        supabaseSuccess = false;
+                    }
+                }
+
+                // If Supabase not available or failed, use local/demo mode
+                if (!supabaseSuccess) {
+                    formData.status = 'DIAJUKAN';
+                    
+                    // Save to localStorage as submitted
+                    localStorage.removeItem('kredens_draft');
+                    localStorage.setItem('kredens_submitted', JSON.stringify({
+                        ...formData,
+                        submittedAt: new Date().toISOString(),
+                        localMode: true
+                    }));
+
+                    showAlert('success', 'Pengajuan Diterima (Local Mode)', 
+                        `Nomor Pengajuan: ${formData.nomorPengajuan}\n\n` +
+                        `Catatan: Pengajuan tersimpan di browser. Untuk sinkronisasi ke server, jalankan SQL fix di bawah ini.`);
+                    showTrackingView();
+                }
+                
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                showAlert('error', 'Pengajuan Gagal', 
+                    'Terjadi kesalahan: ' + (error.message || 'Unknown error') + 
+                    '\n\nData tetap tersimpan di browser sebagai draft.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showTrackingView() {
+            const formContainer = document.getElementById('formContainer');
+            const stepperContainer = document.querySelector('.stepper-container');
+            const progressContainer = document.querySelector('.progress-container');
+            const trackingView = document.getElementById('trackingView');
+
+            if (formContainer) formContainer.classList.add('hidden');
+            if (stepperContainer) stepperContainer.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+            if (trackingView) trackingView.classList.remove('hidden');
+
+            const trackingContent = document.getElementById('trackingContent');
+            if (trackingContent) {
+                trackingContent.innerHTML = `
+                    <div class="alert alert-success" style="margin-bottom: 24px;">
+                        <span class="alert-icon">✅</span>
+                        <div class="alert-content">
+                            <div class="alert-title">Pengajuan Diterima</div>
+                            <div class="alert-message">Formulir kredensial Anda telah berhasil diajukan dan sedang dalam proses verifikasi.</div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px;">
+                        <h4 style="margin-bottom: 12px;">Informasi Pengajuan</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Nomor Pengajuan</span>
+                                <div style="font-weight: 600; font-size: 1.1rem;">${formData.nomorPengajuan || '-'}</div>
+                            </div>
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Nama Pemohon</span>
+                                <div style="font-weight: 600;">${formData.identitas.namaLengkap || '-'}</div>
+                            </div>
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Status</span>
+                                <div><span class="status-badge submitted">Diajukan</span></div>
+                            </div>
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Tanggal Pengajuan</span>
+                                <div style="font-weight: 600;">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 16px;">Timeline Proses</h4>
+                    <div class="timeline">
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Pengajuan Diterima</div>
+                                <div class="timeline-date">${new Date().toLocaleString('id-ID')}</div>
+                                <div class="timeline-description">Formulir telah diterima dan akan diverifikasi oleh admin puskesmas.</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item current">
+                            <div class="timeline-marker">2</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Verifikasi Puskesmas</div>
+                                <div class="timeline-date">Menunggu...</div>
+                                <div class="timeline-description">Admin puskesmas akan memverifikasi kelengkapan dokumen dan data.</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">3</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Verifikasi Dinas Kesehatan</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">4</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Penjadwalan Asesmen</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">5</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Asesmen Kompetensi</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">6</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Rekomendasi Tim Ad Hoc</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">7</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Penetapan Kewenangan Klinis</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">8</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Penugasan Klinis</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item pending">
+                            <div class="timeline-marker">✓</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Selesai</div>
+                                <div class="timeline-date">Menunggu...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; text-align: center;">
+                        <button class="btn btn-outline" onclick="window.print()">🖨️ Cetak Bukti Pengajuan</button>
+                        <button class="btn btn-secondary" onclick="location.reload()" style="margin-left: 12px;">🔄 Buat Pengajuan Baru</button>
+                    </div>
+                `;
+            }
+        }
+
+        function generateReviewSummary() {
+            const summaryContent = document.getElementById('summaryContent');
+            if (!summaryContent) return;
+            
+            summaryContent.innerHTML = `
+                <div style="display: grid; gap: 16px;">
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>👤 Identitas:</strong> ${formData.identitas.gelarDepan} ${formData.identitas.namaLengkap} ${formData.identitas.gelarBelakang}
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>💼 Profesi:</strong> ${formData.profesi.jenisProfesi} - ${formData.profesi.jabatanFungsional || '-'}
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>🎓 Pendidikan:</strong> ${formData.pendidikan.jenjang} ${formData.pendidikan.programStudi} - ${formData.pendidikan.institusi}
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>📋 STR:</strong> ${formData.strSip.str.nomor || '-'} | <strong>SIP:</strong> ${formData.strSip.sip.nomor || '-'}
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>🏢 Unit Kerja:</strong> ${masterData.unitKerja.find(u => u.id === formData.profesi.unitKerja)?.nama || '-'}
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm);">
+                        <strong>📎 Dokumen Terupload:</strong> ${Object.keys(formData.dokumen).filter(k => formData.dokumen[k]?.status === 'LENGKAP').length}/${JENIS_DOKUMEN.length}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // SUPABASE AUTH HELPER
+        // ============================================
+
+        async function getCurrentUserId() {
+            // Generate unique ID from localStorage or use NIK as fallback
+            let tempUserId = localStorage.getItem('kredens_temp_user_id');
+            
+            if (!tempUserId) {
+                // Create temporary ID based on timestamp + random
+                tempUserId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('kredens_temp_user_id', tempUserId);
+            }
+            
+            try {
+                if (_supabaseClient) {
+                    // Check if there's an active session first
+                    const { data: { session } } = await _supabaseClient.auth.getSession();
+                    
+                    if (session?.user) {
+                        // User is logged in - use their real ID
+                        localStorage.setItem('kredens_real_user_id', session.user.id);
+                        return session.user.id;
+                    }
+                }
+            } catch (e) {
+                // Silently handle auth errors (user not logged in, etc.)
+                console.log('No active auth session, using temporary ID');
+            }
+            
+            // Return temporary ID for non-authenticated users
+            return tempUserId;
+        }
+
+        function getDisplayUserId() {
+            const realId = localStorage.getItem('kredens_real_user_id');
+            const tempId = localStorage.getItem('kredens_temp_user_id');
+            return realId || tempId || 'anonymous';
+        }
+
+        // ============================================
+        // SUPABASE USER MANAGEMENT
+        // ============================================
+
+        // Ensure user exists in users table before submission
+        async function ensureUserExists(userId) {
+            try {
+                if (!_supabaseClient) return userId;
+
+                // Call the RPC function to ensure user exists
+                const { data, error } = await _supabaseClient.rpc('validate_and_fix_user_id', {
+                    p_input_id: userId,
+                    p_email: formData.identitas.email || null,
+                    p_name: formData.identitas.namaLengkap || null,
+                    p_nik: formData.identitas.nik || null
+                });
+
+                if (error) {
+                    console.warn('RPC validate_and_fix_user_id failed:', error);
+                    // Fallback: try to insert user directly
+                    const { error: insertError } = await _supabaseClient
+                        .from('users')
+                        .upsert({
+                            id: userId,
+                            email: formData.identitas.email || 'anonymous@local',
+                            name: formData.identitas.namaLengkap || 'Anonymous',
+                            nik: formData.identitas.nik || null,
+                            nomor_whatsapp: formData.identitas.nomorWhatsApp || null,
+                            role: 'PEMOHON'
+                        }, {
+                            onConflict: 'id',
+                            ignoreDuplicates: true
+                        });
+                    
+                    if (insertError) {
+                        console.warn('User upsert failed:', insertError);
+                    }
+                    
+                    return userId;
+                }
+
+                return data || userId;
+            } catch (e) {
+                console.error('Error ensuring user exists:', e);
+                return userId;
+            }
+        }
+
+        // Get detailed error message from Supabase error object
+        function getSupabaseErrorMessage(error) {
+            if (!error) return 'Unknown error';
+            
+            // Extract message from various error formats
+            let message = error.message || '';
+            
+            // Add details if available
+            if (error.details) message += '\nDetails: ' + error.details;
+            if (error.hint) message += '\nHint: ' + error.hint;
+            if (error.code) message += '\nCode: ' + error.code;
+            
+            // Truncate if too long
+            if (message.length > 500) {
+                message = message.substring(0, 500) + '...';
+            }
+            
+            return message;
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        // Format date to Indonesian locale
+        function formatDateIndo(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            const statusConfig = {
+                'DRAFT': { class: 'draft', label: 'Draft' },
+                'DIAJUKAN': { class: 'submitted', label: 'Diajukan' },
+                'VERIFIKASI_PUSKESMAS': { class: 'verifying', label: 'Verifikasi Puskesmas' },
+                'PERBAIKAN': { class: 'verifying', label: 'Perlu Perbaikan' },
+                'VERIFIKASI_LENGKAP': { class: 'verifying', label: 'Verifikasi Lengkap' },
+                'DITERUSKAN_KE_DINAS': { class: 'submitted', label: 'Diteruskan ke Dinas' },
+                'PENJADWALAN_ASESMEN': { class: 'verifying', label: 'Penjadwalan Asesmen' },
+                'ASESMEN': { class: 'verifying', label: 'Asesmen' },
+                'REKOMENDASI': { class: 'verifying', label: 'Rekomendasi' },
+                'PENETAPAN_KEWENANGAN_KLINIS': { class: 'verifying', label: 'Penetapan Kewenangan' },
+                'PENUGASAN_KLINIS': { class: 'submitted', label: 'Penugasan Klinis' },
+                'SELESAI': { class: 'approved', label: 'Selesai' },
+                'DITOLAK': { class: 'rejected', label: 'Ditolak' },
+                'DIBATALKAN': { class: 'rejected', label: 'Dibatalkan' }
+            };
+
+            const config = statusConfig[status] || { class: 'draft', label: status };
+            return `<span class="status-badge ${config.class}">${config.label}</span>`;
+        }
+
+        // Alert System
+        function showAlert(type, title, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            if (!alertContainer) return;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const alertHtml = `
+                <div class="alert alert-${type}">
+                    <span class="alert-icon">${icons[type]}</span>
+                    <div class="alert-content">
+                        <div class="alert-title">${title}</div>
+                        <div class="alert-message">${message}</div>
+                    </div>
+                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            `;
+
+            alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const alerts = alertContainer.querySelectorAll('.alert');
+                if (alerts.length > 0) {
+                    alerts[0].remove();
+                }
+            }, 5000);
+        }
+
+        // Modal Functions
+        function openModal() {
+            const modal = document.getElementById('confirmModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Loading Overlay
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.toggle('hidden', !show);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('confirmModal');
+            if (modal && e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
